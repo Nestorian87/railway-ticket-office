@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Профіль – Залізнична каса</title>
+</head>
+<body class="bg-light">
+<header style="padding-bottom: 60px;">
+    <%- include('partials/header'); %>
+</header>
+<main>
+    <section class="profile-header text-center bg-white">
+        <div class="container p-3">
+            <div class="container d-flex justify-content-center align-items-center gap-3">
+                <h2 class="card-title fs-3 mb-0"><%= user.getFullName() %></h2>
+                <a class="btn btn-outline-danger" href="/logout">Вийти</a>
+            </div>
+
+            <p class="card-text mb-1">
+                <strong>Електронна пошта:</strong> <%= user.email %>
+            </p>
+            <p class="card-text mb-1">
+                <strong>Телефон:</strong> <%= user.phone_number %>
+            </p>
+        </div>
+        <hr>
+    </section>
+    <section class="container mt-4 text-center mt-5">
+        <h3>Мої пасажири</h3>
+        <table class="table table-striped mt-4">
+            <thead>
+            <tr>
+                <th scope="col">Імʼя</th>
+                <th scope="col">Прізвище</th>
+                <th scope="col">Пільга</th>
+                <th scope="col">Пільговий документ</th>
+                <th scope="col">Номер пільгового документу</th>
+            </tr>
+            </thead>
+            <tbody>
+            <% user.passengers.forEach(passenger => { %>
+                <tr>
+                    <td><%= passenger.passenger_first_name %></td>
+                    <td><%= passenger.passenger_last_name %></td>
+                    <td><%= passenger.benefit ? passenger.benefit.benefit_name : '–' %></td>
+                    <td><%= passenger.benefit ? passenger.benefit.document_name : '–' %></td>
+                    <td><%= passenger.benefit ? passenger.benefit_document : '–' %></td>
+                </tr>
+            <% }) %>
+            </tbody>
+        </table>
+
+        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
+            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPassengerModal">Додати пасажира
+            </button>
+        </div>
+    </section>
+
+    <div class="modal fade" id="addPassengerModal" tabindex="-1" aria-labelledby="addPassengerModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPassengerModalLabel">Додати Пасажира</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPassengerForm" action="/add-passenger" method="POST">
+                        <div class="mb-3">
+                            <label for="passengerName" class="form-label">Імʼя</label>
+                            <input type="text" class="form-control" id="passengerName" name="firstName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="passengerSurname" class="form-label">Прізвище</label>
+                            <input type="text" class="form-control" id="passengerSurname" name="lastName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="benefit" class="form-label">Пільга</label>
+                            <select class="form-select" id="benefit" name="benefitId">
+                                <option value="">Без пільги</option>
+                                <% benefits.forEach(benefit => { %>
+                                    <option value="<%= benefit.benefit_id %>"
+                                            data-document="<%= benefit.document_name %>">
+                                        <%= benefit.benefit_name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="benefitDocumentField" style="display: none;">
+                            <label id="benefitDocumentLabel" class="form-label">Номер пільгового документа</label>
+                            <input type="text" class="form-control" id="benefitDocument" name="benefitDocument">
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Зберегти Пасажира</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+    document.getElementById('benefit').addEventListener('change', function () {
+        const selectedBenefit = this.options[this.selectedIndex];
+        const documentName = selectedBenefit.getAttribute('data-document');
+        const benefitDocumentField = document.getElementById('benefitDocumentField');
+        const benefitDocumentLabel = document.getElementById('benefitDocumentLabel');
+        const benefitDocumentInput = document.getElementById('benefitDocument');
+
+        if (documentName) {
+            benefitDocumentField.style.display = 'block';
+            benefitDocumentLabel.textContent = documentName;
+            benefitDocumentInput.setAttribute('required', 'required');
+        } else {
+            benefitDocumentField.style.display = 'none';
+            benefitDocumentInput.removeAttribute('required');
+            benefitDocumentInput.value = '';
+        }
+    });
+</script>
+</body>
+</html>

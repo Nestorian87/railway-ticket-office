@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Реєстрація – Залізнична каса</title>
+</head>
+<body class="bg-light">
+<header>
+    <%- include('partials/header'); %>
+</header>
+<div class="background-image"></div>
+<main>
+    <section class="py-3 py-md-5">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-5 col-xxl-4">
+                    <div class="card border border-light-subtle rounded-3 shadow-sm">
+                        <div class="card-body p-3 p-md-4 p-xl-5">
+                            <h2 class="fw-normal text-center mb-4">Реєстрація</h2>
+                            <% errors.forEach(error => { %>
+                                <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                                    <%= error.msg %>
+                                    <button type="button" class="btn-close" data-bs-dismiss="alert"
+                                            aria-label="Close"></button>
+                                </div>
+                            <% }) %>
+                            <form id="registration_form" action="/registration" method="POST">
+                                <div class="row gy-2 overflow-hidden">
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" name="first_name" id="first_name"
+                                                   placeholder="Імʼя" value="<%= formData ? formData.first_name : '' %>"
+                                                   required>
+                                            <label for="first_name" class="form-label text-muted">Імʼя</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            <input type="text" class="form-control" name="last_name" id="last_name"
+                                                   placeholder="Прізвище"
+                                                   value="<%= formData ? formData.last_name : '' %>" required>
+                                            <label for="last_name" class="form-label text-muted">Прізвище</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            <input type="tel"
+                                                   minlength="17" maxlength="17" class="form-control"
+                                                   name="phone_number" id="phone_number" placeholder="+380123456789"
+                                                   value="<%= formData ? formData.phone_number : '+380' %>"
+                                                   required>
+                                            <label for="phone_number" class="form-label text-muted">Номер
+                                                телефону</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            <input type="email" class="form-control" name="email" id="email"
+                                                   placeholder="example@gmail.com"
+                                                   value="<%= formData ? formData.email : '' %>" required>
+                                            <label for="email" class="form-label text-muted">Електронна пошта</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="form-floating mb-3">
+                                            <input type="password" class="form-control" name="password" id="password"
+                                                   placeholder="Пароль"
+                                                   value="<%= formData ? formData.password : '' %>" required>
+                                            <label for="password" class="form-label text-muted">Пароль</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="d-grid my-3">
+                                            <button class="btn btn-primary btn-lg" type="submit">Зареєструватися
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+</main>
+
+<script>
+    document.getElementById('phone_number').addEventListener('input', function (e) {
+        let input = e.target.value.replace(/\D/g, '');
+        let formattedPhone = '';
+
+        if (input.startsWith('38')) {
+            input = '+' + input;
+        }
+
+        if (input.length > 0) {
+            formattedPhone = input.substring(0, 4);
+        }
+        if (input.length > 4) {
+            formattedPhone += ' ' + input.substring(4, 6);
+        }
+        if (input.length > 6) {
+            formattedPhone += ' ' + input.substring(6, 9);
+        }
+        if (input.length > 9) {
+            formattedPhone += ' ' + input.substring(9, 13);
+        }
+
+        e.target.value = formattedPhone;
+    });
+
+    document.getElementById('registration_form').addEventListener('submit', function (e) {
+        e.preventDefault();
+
+        const phoneInput = document.getElementById('phone_number');
+        phoneInput.value = phoneInput.value.replace(/\s+/g, '').replace(/[^\d+]/g, '');
+        this.submit();
+    });
+</script>
+</body>
+</html>
