@@ -148,7 +148,9 @@ app.post("/login",
 
             const token = JWTService.generateToken(user.user_id)
 
-            res.cookie("token", token, {httpOnly: true}).redirect("/");
+            res
+                .cookie("token", token, {httpOnly: true})
+                .redirect('/profile');
         } catch (err) {
             console.error(err);
             res.status(500).send("Server error");
