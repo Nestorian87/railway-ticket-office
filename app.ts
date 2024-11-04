@@ -9,6 +9,7 @@ import "reflect-metadata"
 import {check, validationResult} from "express-validator";
 import bcrypt from "bcryptjs";
 import JWTService from "./utils/JWTService";
+import {UserRequest} from "./interfaces/UserRequest";
 
 require('dotenv').config()
 
@@ -203,7 +204,3 @@ const port: number = 3000;
 app.listen(port, () => {
     console.log(`Server listening on port ${port}`);
 });
-
-export interface UserRequest extends express.Request { //TODO extract
-    userId?: number;
-}
