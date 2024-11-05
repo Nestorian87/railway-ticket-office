@@ -50,75 +50,7 @@
             <% }) %>
             </tbody>
         </table>
-
-        <div class="d-grid gap-2 d-md-flex justify-content-md-center mt-4">
-            <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addPassengerModal">Додати пасажира
-            </button>
-        </div>
     </section>
-
-    <div class="modal fade" id="addPassengerModal" tabindex="-1" aria-labelledby="addPassengerModalLabel"
-         aria-hidden="true">
-        <div class="modal-dialog">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="addPassengerModalLabel">Додати пасажира</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <div class="modal-body">
-                    <form id="addPassengerForm" action="/add-passenger" method="POST">
-                        <div class="mb-3">
-                            <label for="passengerName" class="form-label">Імʼя</label>
-                            <input type="text" class="form-control" id="passengerName" name="firstName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="passengerSurname" class="form-label">Прізвище</label>
-                            <input type="text" class="form-control" id="passengerSurname" name="lastName" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="benefit" class="form-label">Пільга</label>
-                            <select class="form-select" id="benefit" name="benefitId">
-                                <option value="">Без пільги</option>
-                                <% benefits.forEach(benefit => { %>
-                                    <option value="<%= benefit.benefit_id %>"
-                                            data-document="<%= benefit.document_name %>">
-                                        <%= benefit.benefit_name %>
-                                    </option>
-                                <% }) %>
-                            </select>
-                        </div>
-                        <div class="mb-3" id="benefitDocumentField" style="display: none;">
-                            <label id="benefitDocumentLabel" class="form-label">Номер пільгового документа</label>
-                            <input type="text" class="form-control" id="benefitDocument" name="benefitDocument">
-                        </div>
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary">Зберегти пасажира</button>
-                        </div>
-                    </form>
-                </div>
-            </div>
-        </div>
-    </div>
 </main>
-
-<script>
-    document.getElementById('benefit').addEventListener('change', function () {
-        const selectedBenefit = this.options[this.selectedIndex];
-        const documentName = selectedBenefit.getAttribute('data-document');
-        const benefitDocumentField = document.getElementById('benefitDocumentField');
-        const benefitDocumentLabel = document.getElementById('benefitDocumentLabel');
-        const benefitDocumentInput = document.getElementById('benefitDocument');
-
-        if (documentName) {
-            benefitDocumentField.style.display = 'block';
-            benefitDocumentLabel.textContent = documentName;
-            benefitDocumentInput.setAttribute('required', 'required');
-        } else {
-            benefitDocumentField.style.display = 'none';
-            benefitDocumentInput.removeAttribute('required');
-            benefitDocumentInput.value = '';
-        }
-    });
-</script>
 </body>
 </html>
