@@ -10,6 +10,8 @@ import {check, validationResult} from "express-validator";
 import bcrypt from "bcryptjs";
 import JWTService from "./utils/JWTService";
 import {UserRequest} from "./interfaces/UserRequest";
+import {AdjacentStationDistance} from "./entity/AjacentStationDistance";
+import {Station} from "./entity/Station";
 
 require('dotenv').config()
 
@@ -20,9 +22,9 @@ export const AppDataSource = new DataSource({
     username: process.env.DB_USERNAME,
     password: process.env.DB_PASSWORD,
     database: process.env.DB_NAME,
-    synchronize: true,
+    synchronize: false,
     logging: true,
-    entities: [User, Passenger, Benefit],
+    entities: [User, Passenger, Benefit, AdjacentStationDistance, Station],
     subscribers: [],
     migrations: [],
 });
@@ -197,6 +199,11 @@ app.post("/add-passenger",
         }
     }
 );
+
+app.get('/stations-graph', async (req, res) => {
+    const stations = await AdjacentStationDistance.find({relations: ['start_station', 'end_station']})
+    res.render('stations-graph', { stations });
+});
 
 
 AppDataSource.initialize()
