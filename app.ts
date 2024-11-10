@@ -1,5 +1,5 @@
 import express, {NextFunction} from 'express';
-import {DataSource} from "typeorm";
+import {DataSource, Not} from "typeorm";
 import {User} from "./entity/User";
 import {Passenger} from "./entity/Passenger";
 import {Benefit} from "./entity/Benefit";
@@ -29,13 +29,12 @@ export const AppDataSource = new DataSource({
 
 const app = express();
 
+
 app.set('view engine', 'ejs');
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
 app.use(cookieParser());
-
-
-
 
 export const auth = (req: UserRequest, res: express.Response, next: NextFunction) => {
     const token = req.cookies?.token;
@@ -113,7 +112,12 @@ app.post("/registration",
 
             await user.save();
 
-            res.redirect('/login');
+            const token = JWTService.generateToken(user.user_id)
+
+            res
+                .cookie("token", token, {httpOnly: true})
+                .redirect('/profile');
+
         } catch (err) {
             console.error(err);
             res.status(500).send("Server error");
@@ -198,6 +202,125 @@ app.post("/add-passenger",
     }
 );
 
+app.post("/edit-passenger",
+    [
+        check("passengerId", "ID пасажира є обов'язковим").not().isEmpty(),
+        check("firstName", "Імʼя не може бути пустим").not().isEmpty(),
+        check("lastName", "Прізвище не може бути пустим").not().isEmpty(),
+        check("benefitDocument", "Номер пільгового документа не може бути пустим")
+            .optional({checkFalsy: true})
+            .isLength({min: 1})
+    ],
+    auth,
+    async (req: UserRequest, res: express.Response) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.status(400).json({errors: errors.array()});
+            return;
+        }
+
+        const {passengerId, firstName, lastName, benefitId, benefitDocument} = req.body;
+
+        try {
+            const passenger = await Passenger.findOne(
+                {
+                    where: {passenger_id: passengerId, user: {user_id: req.userId}}
+                });
+            if (!passenger) {
+                res.status(404).json({errors: [{msg: "Пасажир не знайдений"}]});
+                return
+            }
+
+            passenger.passenger_first_name = firstName;
+            passenger.passenger_last_name = lastName;
+            passenger.benefit = benefitId ? await Benefit.findOne({where: {benefit_id: benefitId}}) : null;
+            passenger.benefit_document = benefitDocument || null;
+
+            await passenger.save();
+
+            res.status(200).redirect('/profile');
+        } catch (err) {
+            console.error(err);
+            res.status(500).json({errors: [{msg: "Помилка сервера"}]});
+        }
+    }
+);
+
+app.delete("/delete-passenger/:id", auth, async (req: UserRequest, res: express.Response) => {
+    try {
+        const passengerId = +req.params.id;
+        const passenger = await Passenger.findOne({
+            where: {
+                passenger_id: passengerId,
+                user: {
+                    user_id: req.userId
+                }
+            },
+        });
+
+        if (!passenger) {
+            res.status(404).json({ error: "Пасажира не знайдено або ви не маєте дозволу на видалення цього пасажира" });
+            return
+        }
+
+        await passenger.remove();
+        res.status(200).json({ message: "Пасажира успішно видалено" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ error: "Помилка сервера" });
+    }
+});
+
+app.delete("/delete-account", auth, async (req: UserRequest, res: express.Response) => {
+    try {
+        await User.delete({user_id: req.userId});
+        res.clearCookie('token')
+        res.status(200).json({ message: "Користувач успішно видалений" });
+    } catch (err) {
+        console.error(err);
+        res.status(500).json({ message: "Помилка сервера" });
+    }
+});
+
+app.post("/edit-profile",
+    [
+        check("email", "Введіть правильну адресу електронної пошти").isEmail(),
+        check("firstName", "Імʼя не може бути пустим").not().isEmpty(),
+        check("lastName", "Прізвище не може бути пустим").not().isEmpty(),
+        check("phoneNumber", "Введіть правильний номер телефону").isMobilePhone("uk-UA")
+    ],
+    auth,
+    async (req: UserRequest, res: express.Response) => {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            res.status(400).json({ errors: errors.array() });
+            return;
+        }
+
+        const { email, firstName, lastName, phoneNumber } = req.body;
+
+        try {
+            const existingUser = await User.findOne({
+                where: {
+                    email,
+                    user_id: Not(req.userId!)
+                }
+            });
+            if (existingUser) {
+                res.status(400).json({ errors: [{ msg: 'Користувач з такою електронною адресою вже існує' }] });
+                return;
+            }
+
+            const updateData: any = { email, user_first_name: firstName, user_last_name: lastName, phone_number: phoneNumber };
+            await User.update({ user_id: req.userId }, updateData);
+
+            res.status(200).json({ msg: "Профіль успішно оновлено" });
+        } catch (err) {
+            console.error(err);
+            res.status(500).send("Server error");
+        }
+    }
+);
 
 AppDataSource.initialize()
     .catch((error) => console.log(error))

@@ -165,3 +165,7 @@ a.link-primary:hover, a.link-primary:focus {
 header {
     padding-bottom: 100px;
 }
+
+.alert-floating {
+    z-index: 9999;
+}

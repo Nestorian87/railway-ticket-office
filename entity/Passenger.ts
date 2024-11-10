@@ -23,4 +23,8 @@ export class Passenger extends BaseEntity {
     @ManyToOne(() => User, (user) => user.passengers, { nullable: true })
     @JoinColumn({ name: "user_id" })
     user!: User | null;
+
+    getFullName(): string {
+        return `${this.passenger_first_name} ${this.passenger_last_name}`;
+    }
 }
