@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Граф станцій</title>
+    <script type="text/javascript" src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <style>
+        #network {
+            width: 100vw;
+            height: 100vh;
+            border: 1px solid lightgray;
+        }
+    </style>
+</head>
+<body>
+
+<div id="network"></div>
+
+<script>
+    const stations = <%- JSON.stringify(stations) %>;
+
+    const nodes = [];
+    const edges = [];
+
+
+    stations.forEach((station) => {
+        nodes.push({ id: station.start_station.station_id, label: station.start_station.station_name });
+        nodes.push({ id: station.end_station.station_id, label: station.end_station.station_name });
+
+        edges.push({
+            from: station.start_station.station_id,
+            to: station.end_station.station_id,
+            label: station.distance_km + ' км',
+        });
+    });
+
+    const uniqueNodes = Array.from(new Set(nodes.map(a => a.id)))
+        .map(id => nodes.find(a => a.id === id));
+
+    const container = document.getElementById('network');
+
+    const data = {
+        nodes: uniqueNodes,
+        edges: edges
+    };
+
+    const options = {
+        nodes: {
+            shape: 'dot',
+            size: 15
+        },
+        edges: {
+            font: {
+                align: 'top'
+            },
+            width: 2,
+            smooth: {
+                type: 'continuous'
+            }
+        },
+        physics: {
+            enabled: false,
+        }
+    };
+
+
+    const network = new vis.Network(container, data, options);
+</script>
+
+
+</body>
+</html>
