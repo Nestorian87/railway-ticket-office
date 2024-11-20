@@ -173,7 +173,7 @@
 
 </style>
 <main>
-    <div class="container my-4">
+    <div class="container-fluid my-4">
 
         <% if (trains.length === 0) { %>
             <div class="row justify-content-center">
@@ -190,7 +190,7 @@
             const minutes = totalMinutes % 60;
             const formattedDuration = `${hours} год ${minutes} хв`;
         %>
-        <div class="train-card col-lg-8 m-auto rounded-5 mb-3 shadow-sm">
+        <div class="train-card col-lg-10 col-xl-8 col-md-12 m-auto rounded-5 mb-3 shadow-sm">
             <div class="content flex-grow-1">
                 <div class="header d-flex">
                     <div class="train-number"><%= train.train_number %></div>
