@@ -7,6 +7,7 @@ import {SeatsParams} from "../interfaces/SeatsParams";
 import {NotFoundError} from "../utils/errors/NotFoundError";
 import {TrainStationService} from "../services/trainStationService";
 import helpers from "../utils/helpers";
+import {CarriageCategoryService} from "../services/carriageCategoryService";
 
 export async function renderSearch(req: UserRequest, res: express.Response) {
     const query = req.query as unknown as SearchQuery;
@@ -32,6 +33,7 @@ export async function renderSeats(req: UserRequest, res: express.Response){
             fromStation: await TrainStationService.getTrainStation(trainId, query.fromStationId),
             toStation: await TrainStationService.getTrainStation(trainId, query.toStationId),
             user: await UserService.getUser(req.userId!),
+            carriageCategory: await CarriageCategoryService.getCarriageCategory(carriageCategoryId),
             helpers
         });
     } catch (err) {

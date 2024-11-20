@@ -1,9 +1,8 @@
 import {AppDataSource} from "../config/database";
-import {Train} from "../models/Train";
-import {TrainSearchResult} from "../interfaces/TrainSearchResult";
 import {CarriageCategorySearchResult} from "../interfaces/CarriageCategorySearchResult";
+import {CarriageCategory} from "../models/CarriageCategory";
 
-export const CarriageCategoryRepository = AppDataSource.getRepository(Train).extend({
+export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCategory).extend({
 
     async findForTrainsBetweenTwoStations(
         trainIds: number[],
