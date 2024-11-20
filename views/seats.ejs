@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вибір місця – Залізнична каса</title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+</head>
+<style>
+    .carriage-container {
+        padding-bottom: 40px;
+        overflow-y: scroll;
+    }
+
+    .grid-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, 40px);
+        gap: 5px;
+    }
+
+    .seat {
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .seat-free {
+        background-color: #21377B;
+        color: white;
+    }
+
+    .seat-selected {
+        background-color: rgb(221, 164, 59);
+        color: white;
+    }
+
+    .seat-occupied {
+        background-color: lightgray;
+        color: gray;
+        cursor: default;
+    }
+
+    .empty-space {
+        width: 35px;
+        height: 35px;
+    }
+</style>
+<body class="bg-light">
+<header style="padding-bottom: 60px;">
+    <%- include('partials/header'); %>
+</header>
+<main>
+    <div class="container mt-5">
+        <h3 class="text-center">
+            <span><%= fromStation.station.station_name %></span>
+            <i class="bi bi-arrow-right"></i>
+            <span><%= toStation.station.station_name %></span>
+        </h3>
+        <div class="text-muted fs-5 text-center">
+            <%= helpers.formatDateWithMonth(new Date(date)) %>, <%= fromStation.departure_time.slice(0, -3) %>
+        </div>
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-lg-9">
+                <% train.carriages.forEach(carriage => { %>
+                    <div class="card m-auto my-5 border-0 rounded-5 shadow">
+                        <h6 class="mt-4 ms-4">Вагон <%= carriage.carriage_number %> <span
+                                    class="badge bg-dark"><%= helpers.getSeatsLabel(carriage.seats.filter(s => s.is_free === '1').length) %></span>
+                        </h6>
+                        <div class="card-body mw-100 m-auto">
+                            <div class="carriage-container border rounded-3 p-4 mb-4">
+                                <div class="grid-container"
+                                     style="grid-template-columns: repeat(<%= carriage.carriage.column_count %>, 40px);">
+                                    <% for (let row = 1; row <= carriage.carriage.row_count; row++) { %>
+                                        <% for (let col = 1; col <= carriage.carriage.column_count; col++) { %>
+                                            <%
+                                                const seat = carriage.seats.find(
+                                                        seat => seat.row_number === row && seat.column_number === col
+                                                );
+                                            if (seat) {
+                                            %>
+                                                <div data-seat-id="<%= seat.carriage_seat_id %>"
+                                                     data-carriage-number="<%= carriage.carriage_number %>"
+                                                     data-seat-number="<%= seat.seat_number %>"
+                                                     class="seat <%= seat.is_free === '1' ? 'seat-free' : 'seat-occupied' %>">
+                                                    <%= seat.seat_number %>
+                                                </div>
+                                            <% } else { %>
+                                                <div class="empty-space"></div>
+                                            <% } %>
+                                        <% } %>
+                                    <% } %>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <% }) %>
+            </div>
+            <div class="col">
+                <div class="card sticky-top col-md-12 col-sm-12 col-lg-9 m-auto my-5 border-0 rounded-4 shadow p-4"
+                     style="top: 10rem;">
+                    <p id="noSeatsText">Виберіть до 4 місць</p>
+                    <div id="selectedSeats"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const maxSelectedSeats = 4;
+
+        document.addEventListener('click', (event) => {
+
+            const target = event.target;
+            const selectedSeats = getSelectedSeats()
+            if (target.classList.contains('seat-free') && selectedSeats.length < maxSelectedSeats) {
+                target.classList.remove('seat-free');
+                target.classList.add('seat-selected');
+            } else if (target.classList.contains('seat-selected')) {
+                target.classList.remove('seat-selected');
+                target.classList.add('seat-free');
+            }
+            showSelectedSeats();
+
+        });
+
+        function getSelectedSeats() {
+            return [...document.querySelectorAll('.seat-selected')].map(el => {
+                return {
+                    carriageSeatId: +el.getAttribute('data-seat-id'),
+                    carriageNumber: +el.getAttribute('data-carriage-number'),
+                    carriageSeatNumber: +el.getAttribute('data-seat-number'),
+                }
+            });
+        }
+
+        function showSelectedSeats() {
+            const selectedSeats = getSelectedSeats();
+            const noSeatsText = document.getElementById('noSeatsText');
+            noSeatsText.style.display = selectedSeats.length > 0 ? 'none' : 'block';
+
+            const seatsBlock = document.getElementById('selectedSeats');
+            seatsBlock.innerHTML = '';
+            selectedSeats.forEach(seat => {
+                seatsBlock.innerHTML += `
+                    <p>${seat.carriageNumber} вагон, ${seat.carriageSeatNumber} місце</p>
+                `
+            });
+        }
+    </script>
+</main>
+</body>
+</html>

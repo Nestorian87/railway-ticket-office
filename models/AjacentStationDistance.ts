@@ -2,7 +2,7 @@ import {Entity, PrimaryGeneratedColumn, Column, ManyToOne, BaseEntity, JoinColum
 import {Station} from './Station';
 
 @Entity("adjacent_station_distance")
-export class AdjacentStationDistance extends BaseEntity {
+export class AdjacentStationDistance {
     @PrimaryGeneratedColumn()
     distance_id!: number;
 

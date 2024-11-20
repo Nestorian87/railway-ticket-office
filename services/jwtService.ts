@@ -1,6 +1,6 @@
 import jwt from 'jsonwebtoken';
 
-class JWTService {
+class JwtService {
 
     private static readonly EXPIRES_IN = '30d'
     private static isDotenvConfigured = false
@@ -32,4 +32,4 @@ type Token = {
 }
 
 
-export default JWTService;
+export default JwtService;

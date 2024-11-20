@@ -1,0 +1,304 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Поїзди – Залізнична каса</title>
+    <link rel="icon" href="img/logo.png" type="image/png">
+</head>
+<body class="bg-light">
+<header style="padding-bottom: 60px;">
+    <%- include('partials/header'); %>
+</header>
+<style>
+    .train-card {
+        border: 1px solid #e0e0e0;
+        border-radius: 8px;
+        background-color: #fff;
+        margin-bottom: 20px;
+        font-family: Arial, sans-serif;
+        padding: 15px;
+    }
+
+    .train-card .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .train-card .train-number {
+        font-weight: bold;
+        font-size: 16px;
+        color: #1a3b7a;
+        padding: 5px 10px;
+        background-color: #e0e6f8;
+        border-radius: 10px;
+    }
+
+    .route-info {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        padding-top: 10px;
+        color: #333;
+        position: relative;
+        top: -3px;
+    }
+
+    .route-info .station-info {
+        font-size: 0.9rem;
+    }
+
+    .route-info .station-info strong {
+        font-size: 0.9rem;
+        color: #1a3b7a;
+    }
+
+    .duration-container {
+        display: flex;
+        align-items: center;
+        font-size: 1rem;
+        color: #1a3b7a;
+        flex-grow: 1;
+        justify-content: center;
+        text-align: center;
+    }
+
+    .duration-container .line {
+        flex: 1;
+        height: 2px;
+        background-color: #1a3b7a;
+    }
+
+    .duration-container .circle-start,
+    .duration-container .circle-end {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        border: 2px solid #1a3b7a;
+        background-color: #fff;
+    }
+
+    .duration-container .circle-end {
+        background-color: #1a3b7a;
+    }
+
+    .duration-text {
+        padding: 0 10px;
+    }
+
+    .station-info {
+        padding: 0 10px;
+        font-size: 0.9rem !important;
+    }
+
+    .time-text {
+        font-size: 1.25rem !important;
+        color: #000 !important;
+        font-weight: 600;
+    }
+
+    .carriage-categories {
+        display: flex;
+        align-items: center;
+    }
+
+    .category {
+        text-align: center;
+        font-size: 1rem;
+        color: #333;
+        padding: 0 10px;
+    }
+
+    .class-info {
+        font-size: 0.9rem;
+        font-weight: 550;
+        color: #333;
+    }
+
+    .seat-info {
+        color: #666;
+        font-size: 0.8rem;
+    }
+
+    .price {
+        margin-top: 1rem;
+        font-size: 1.1rem;
+        font-weight: bold;
+    }
+
+    .category-card {
+        transition-duration: 0.1s;
+    }
+
+    .category-card:hover {
+        background-color: rgba(0, 26, 59, 0.11);
+        cursor: pointer;
+    }
+
+    @media (min-width: 768px) {
+        .carriage-categories {
+            border-left: 1px solid #dee2e6;
+        }
+    }
+
+    .route-summary {
+        font-size: 0.8rem;
+    }
+
+    .route-summary .btn {
+        border-color: rgba(0, 26, 59, 0.11);
+        color: black;
+        background: white;
+    }
+
+    .route-summary .btn:hover {
+        background: rgba(0, 26, 59, 0.11);
+    }
+
+    .route-summary .btn:active {
+        background: rgba(0, 26, 59, 0.11);
+    }
+
+    .message-block {
+        border-radius: 8px;
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 20px;
+        margin-top: 30px;
+        font-size: 1.1rem;
+        font-weight: 500;
+        text-align: center;
+    }
+
+</style>
+<main>
+    <div class="container my-4">
+
+        <% if (trains.length === 0) { %>
+            <div class="row justify-content-center">
+                <div class="col-md-8 te">
+                    <div class="message-block">
+                        <span><strong>Вибачте!</strong> Поїзди між обраними станціями на вказану дату не знайдено.</span>
+                    </div>
+                </div>
+            </div>
+        <% }
+        trains.forEach(train => {
+            const totalMinutes = train.total_travel_time_minutes;
+            const hours = Math.floor(totalMinutes / 60);
+            const minutes = totalMinutes % 60;
+            const formattedDuration = `${hours} год ${minutes} хв`;
+        %>
+        <div class="train-card col-lg-8 m-auto rounded-5 mb-3 shadow-sm">
+            <div class="content flex-grow-1">
+                <div class="header d-flex">
+                    <div class="train-number"><%= train.train_number %></div>
+                </div>
+                <div class="row">
+                    <div class="route-info col-md-8 p-0 mt-3 ps-1">
+                        <div class="station-info">
+                            <span class="time-text"><%= train.departure_time %></span>
+                            <br>
+                            <span><%= helpers.formatDateWithMonth(new Date(train.departure_date)) %></span>
+                            <br>
+                            <strong class="text-black"><%= train.departure_station_name %></strong>
+                        </div>
+
+                        <div class="duration-container">
+                            <div class="circle-start d-sm-block d-none"></div>
+                            <div class="line d-sm-block d-none"></div>
+                            <span class="duration-text"><%= formattedDuration %></span>
+                            <div class="line d-sm-block d-none"></div>
+                            <div class="circle-end d-sm-block d-none"></div>
+                        </div>
+
+                        <div class="station-info text-end">
+                            <strong class="time-text"><%= train.arrival_time %></strong>
+                            <br>
+                            <span><%= helpers.formatDateWithMonth(new Date(train.arrival_date)) %></span>
+                            <br>
+                            <strong class="text-black"><%= train.arrival_station_name %></strong>
+                        </div>
+                    </div>
+                    <div class="carriage-categories col-md-4 d-flex justify-content-center row m-auto">
+                        <% train.carriage_categories.forEach(category => { %>
+                            <a href="/train/<%= train.train_id %>/category/<%= category.carriage_category_id %>/seats?fromStationId=<%= fromStationId %>&toStationId=<%= toStationId %>&date=<%= date %>"
+                               class="text-decoration-none category-card card col h-100 d-flex justify-content-center p-3 rounded-5 m-2 shadow-none border-1">
+                                <div class="category">
+                                    <div class="class-info"><%= category.category_name %></div>
+                                    <div class="seat-info"><%= helpers.getSeatsLabel(category.free_seats_count) %></div>
+                                    <div class="price"><%= category.total_ticket_price %> ₴</div>
+                                </div>
+                            </a>
+                        <% }); %>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <div class="route-summary">
+                        <div class="btn btn-outline-light rounded-5" data-bs-toggle="modal"
+                             data-bs-target="#train<%= train.train_id %>RouteModal">
+                            <span><%= train.route_departure_station_name %></span>
+                            <i class="bi bi-arrow-right"></i>
+                            <span><%= train.route_arrival_station_name %></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal fade" id="train<%= train.train_id %>RouteModal" tabindex="-1"
+             aria-labelledby="train<%= train.train_id %>RouteModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="train<%= train.train_id %>RouteModalLabel">
+                            Маршрут <%= train.train_number %></h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="container">
+                            <div class="row mb-4">
+                                <div class="col-3 text-muted">Час</div>
+                                <div class="col-6 text-muted">Станція</div>
+                                <div class="col-3 text-muted">Зупинка</div>
+                            </div>
+                            <% train.route_stations.forEach((station, index) => {
+                                const isFirstOrLastStation = index === 0 || index === train.route_stations.length - 1
+                            %>
+                            <div class="row mb-3 align-items-center <%= isFirstOrLastStation ? 'pt-3 pb-3' : '' %>">
+                                <div class="col-3">
+                                    <% if (station.arrival_time) { %>
+                                        <div><%= station.arrival_time.slice(0, -3) %></div>
+                                    <% } %>
+                                    <% if (station.departure_time) { %>
+                                        <div><%= station.departure_time.slice(0, -3) %></div>
+                                    <% } %>
+                                </div>
+
+                                <div class="col-6">
+                                    <span style="font-weight: <%= isFirstOrLastStation ? '600' : '0' %>"><%= station.station_name %></span>
+                                </div>
+
+                                <div class="col-3">
+                                    <% if (index === 0) { %>
+                                        початкова
+                                    <% } else if (index === train.route_stations.length - 1) { %>
+                                        кінцева
+                                    <% } else { %>
+                                        <%= station.stay_time ? `${parseInt(station.stay_time.slice(3, 5))} хв` : '' %>
+                                    <% } %>
+                                </div>
+                            </div>
+                            <% }) %>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <% }); %>
+    </div>
+</main>
+</body>
+</html>

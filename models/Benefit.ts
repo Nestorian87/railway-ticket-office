@@ -2,7 +2,12 @@ import {Entity, Column, PrimaryGeneratedColumn, OneToMany, BaseEntity} from "typ
 import { Passenger } from "./Passenger";
 
 @Entity()
-export class Benefit extends BaseEntity {
+export class Benefit {
+
+    constructor(id: number) {
+        this.benefit_id = id
+    }
+
     @PrimaryGeneratedColumn()
     benefit_id!: number;
 

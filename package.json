@@ -30,6 +30,7 @@
     "@types/jsonwebtoken": "^9.0.7",
     "@types/method-override": "^0.0.35",
     "@types/mysql": "^2.15.26",
-    "@types/node": "^22.7.9"
+    "@types/node": "^22.7.9",
+    "tsx": "^4.19.2"
   }
 }
