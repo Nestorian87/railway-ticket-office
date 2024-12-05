@@ -27,6 +27,14 @@ function formatDateWithMonth(date: Date): string {
     return `${day} ${monthGenitive}`;
 }
 
+function formatDateWithMonthAndYear(date: Date): string {
+    return `${formatDateWithMonth(date)} ${date.getFullYear()}`;
+}
+
+function formatPrice(price: number) {
+    return price % 1 === 0 ? Math.round(price) : (price).toFixed(2)
+}
+
 export default {
-    getSeatsLabel, formatDateWithMonth
+    getSeatsLabel, formatDateWithMonth, formatDateWithMonthAndYear, formatPrice
 }

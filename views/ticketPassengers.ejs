@@ -121,7 +121,7 @@
     </div>
 </main>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="js/addPassengerForm.js"></script>
+<script src="/js/addPassengerForm.js"></script>
 <script>
 
     const data = <%- JSON.stringify(data) %>;
@@ -216,7 +216,7 @@
                 const existingOption = Array.from(select.options).find(option => option.value === addedPassenger.id);
                 if (!existingOption) {
                     const option = document.createElement('option');
-                    option.value = addedPassenger.id;
+                    option.value = addedPassenger.passenger_id;
                     option.textContent = `${addedPassenger.passenger_first_name} ${addedPassenger.passenger_last_name}` +
                         (addedPassenger.benefit ? ` – ${addedPassenger.benefit.benefit_name.toLowerCase()}` : '');
 

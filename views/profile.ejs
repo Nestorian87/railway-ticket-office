@@ -153,7 +153,7 @@
                             </select>
                         </div>
                         <div class="mb-3" id="editBenefitDocumentField" style="display: none;">
-                            <label id="editBenefitDocumentLabel" class="form-label">Номер пільгового документа</label>
+                            <label id="editBenefitDocumentLabel" for="editBenefitDocument" class="form-label">Номер пільгового документа</label>
                             <input type="text" class="form-control" id="editBenefitDocument" name="benefitDocument">
                         </div>
                         <div class="d-grid mt-4">
@@ -235,6 +235,8 @@
 <script>
 
     <%- helpers.formatDateWithMonth.toString() %>
+    <%- helpers.formatDateWithMonthAndYear.toString() %>
+    <%- helpers.formatPrice.toString() %>
 
     const addPassengerModal = new bootstrap.Modal(document.getElementById('addPassengerModal'));
     const editPassengerModal = new bootstrap.Modal(document.getElementById('editPassengerModal'));
@@ -430,7 +432,7 @@
                         <td>${passenger.benefit ? passenger.benefit_document : '–'}</td>
                         <td>
                             <button class="btn btn-sm btn-warning me-2"
-                                    onclick="showEditForm(${passenger.passenger_id}, '${passenger.passenger_first_name}', '${passenger.passenger_last_name}', ${passenger.benefit ? passenger.benefit.benefit_id : 'null'}, '${passenger.benefit_document}')">
+                                    onclick="showEditForm(${passenger.passenger_id}, '${passenger.passenger_first_name}', '${passenger.passenger_last_name}', ${passenger.benefit ? passenger.benefit.benefit_id : null}, ${passenger.benefit_document ? `'${passenger.benefit_document}'` : null})">
                                 <i class="bi bi-pencil"></i>
                             </button>
                             <button class="btn btn-sm btn-danger" data-bs-toggle="modal"
@@ -454,11 +456,16 @@
             const tickets = (await response.json()).data;
             let html = '';
             let lastDate = null;
+
+            if (tickets.length === 0) {
+                html = '<p>Немає куплених квитків</p>'
+            }
+
             tickets.forEach((ticket) => {
                 const hours = Math.floor(ticket.total_travel_time_minutes / 60);
                 const minutes = ticket.total_travel_time_minutes % 60;
                 const formattedDuration = `${hours} год ${minutes} хв`;
-                const formattedDate = formatDateWithMonth(new Date(ticket.trip_start_date));
+                const formattedDate = formatDateWithMonthAndYear(new Date(ticket.trip_start_date));
 
                 if (lastDate !== formattedDate) {
                     html += `<div class="date-header mb-3"><strong>${formattedDate}</strong></div>`;
@@ -500,10 +507,10 @@
                                     ${ticket.carriage_number} вагон, ${ticket.seat_number} місце
                                 </div>
                             </div>
-                            <div class="fs-5 fw-semibold">
-                                ${(+ticket.ticket_price % 1 === 0 ? Math.round(ticket.ticket_price) : (+ticket.ticket_price).toFixed(2))} ₴
-                            </div>
+                            <div class="fs-5 fw-semibold">${formatPrice(+ticket.ticket_price)} ₴</div>
                         </div>
+                        <a class="btn btn-outline-secondary" href="/tickets/${ticket.ticket_id}/route/pdf"><i class="bi bi-download"></i> Завантажити маршрут</a>
+                        <a class="btn btn-outline-primary" href="/tickets/${ticket.ticket_id}/pdf"><i class="bi-download"></i> Завантажити квиток</a>
                     </div>
                `;
             });

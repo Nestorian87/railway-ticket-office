@@ -116,6 +116,10 @@ export const TrainService = {
             date: data.date,
         }
 
+        if (data.tickets.some(ticket => ticket.passengerId == null)) {
+            throw new Error("Not all tickets have passengers");
+        }
+
         const trainCarriages = await Promise.all(
             data.tickets.map(ticket =>
                 TrainCarriageService.getTrainCarriageWithTrainAndCarriage(ticket.trainCarriageId)
