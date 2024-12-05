@@ -16,6 +16,7 @@ export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCa
                    t.train_id,
                    cc.carriage_category_id,
                    cc.category_name,
+                   f.fare_id,
                    (f.ticket_price + f.seat_reservation_price) AS total_ticket_price,
                    ((SELECT COUNT(1)
                      FROM carriage_seat cs
@@ -25,9 +26,10 @@ export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCa
                        FROM ticket tk
                         JOIN train_carriage tc ON tk.train_carriage_id = tc.train_carriage_id
                         JOIN carriage c ON tc.carriage_id = c.carriage_id
-                       JOIN train_station dep_s ON tk.departure_station_id = dep_s.station_id AND dep_s.train_id = t.train_id
-                       JOIN train_station arr_s ON tk.arrival_station_id = arr_s.station_id AND arr_s.train_id = t.train_id
-                       WHERE c.carriage_category_id = cc.carriage_category_id AND
+                       JOIN train_station dep_s ON tk.departure_station_id = dep_s.train_station_id
+                       JOIN train_station arr_s ON tk.arrival_station_id = arr_s.train_station_id
+                       WHERE tc.train_id = t.train_id AND
+                             c.carriage_category_id = cc.carriage_category_id AND
                              tk.trip_start_date = ?
                        AND arr_s.station_number >
                        (SELECT ts.station_number FROM train_station ts WHERE ts.train_id = t.train_id AND ts.station_id = ?)
@@ -63,6 +65,7 @@ export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCa
                            GROUP BY t.train_id) distance ON distance.train_id = tc.train_id
             WHERE t.train_id IN (${trainIds.join(",")})
               AND distance.total_distance BETWEEN f.min_distance_km AND f.max_distance_km
+            ORDER BY total_ticket_price DESC
         `;
 
         return await this.query(carriageCategoriesQuery,

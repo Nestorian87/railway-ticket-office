@@ -4,6 +4,11 @@ import {Ticket} from "./Ticket";
 
 @Entity("carriage_seat")
 export class CarriageSeat {
+
+    constructor(carriage_seat_id: number) {
+        this.carriage_seat_id = carriage_seat_id;
+    }
+
     @PrimaryGeneratedColumn()
     carriage_seat_id!: number;
 

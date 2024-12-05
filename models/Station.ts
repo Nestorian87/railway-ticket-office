@@ -5,6 +5,11 @@ import {TrainStation} from "./TrainStation";
 
 @Entity()
 export class Station {
+
+    constructor(station_id: number) {
+        this.station_id = station_id;
+    }
+
     @PrimaryGeneratedColumn()
     station_id!: number;
 
@@ -16,12 +21,6 @@ export class Station {
 
     @OneToMany(() => AdjacentStationDistance, (distance) => distance.end_station)
     end_station_distances!: AdjacentStationDistance[];
-
-    @OneToMany(() => Ticket, (ticket) => ticket.departureStation)
-    departureTickets!: Ticket[];
-
-    @OneToMany(() => Ticket, (ticket) => ticket.arrivalStation)
-    arrivalTickets!: Ticket[];
 
     @OneToMany(() => TrainStation, (trainStation) => trainStation.station)
     trainStations!: TrainStation[];

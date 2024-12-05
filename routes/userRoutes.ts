@@ -49,5 +49,4 @@ router.post("/edit-profile",
 router.delete("/profile", auth, deleteProfile);
 
 
-
 export default router;

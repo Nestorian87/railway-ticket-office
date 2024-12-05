@@ -12,10 +12,6 @@ export const UserService = {
         return UserRepository.findOneBy({user_id: userId});
     },
 
-    async getUserWithPassengers(userId: number): Promise<User | null> {
-        return UserRepository.findOneByIdWithPassengers(userId)
-    },
-
     async addUser(
         email: string,
         password: string,

@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Вибір місця – Залізнична каса</title>
+    <link rel="icon" href="/img/logo.png" type="image/png">
+</head>
+<body class="bg-light">
+<header style="padding-bottom: 60px;">
+    <%- include('partials/header'); %>
+</header>
+<main class="container mt-4">
+    <form id="buy-tickets-form">
+        <h3 class="text-center">
+            <span><%= data.fromStation.station.station_name %></span>
+            <i class="bi bi-arrow-right"></i>
+            <span><%= data.toStation.station.station_name %></span>
+        </h3>
+        <div class="text-muted fs-5 text-center">
+            <%= helpers.formatDateWithMonth(new Date(data.date)) %>, <%= data.fromStation.departure_time.slice(0, -3) %>
+        </div>
+        <div class="row">
+            <div class="col-md-12 col-sm-12 col-lg-9">
+                <% data.selectedSeats.forEach((seat, index) => { %>
+                    <div class="card my-3 p-3 border-0 rounded-4 shadow">
+                        <h6 class="d-flex align-items-center">Пасажир <%= index + 1 %>
+                            <span class="badge bg-secondary ms-2">
+                                <%= seat.carriageNumber %> вагон, <%= seat.carriageSeatNumber %> місце
+                            </span>
+                            <span id="passenger-<%= index %>-discount"></span>
+                        </h6>
+                        <hr>
+                        <div class="row">
+                            <div class="col-12 d-flex align-items-center">
+                                <select id="passenger-<%= index %>" name="passengers-<%= index %>"
+                                        class="form-select passenger-select flex-grow-1"
+                                        data-index="<%= index %>" required>
+                                    <option value="" selected>Оберіть пасажира</option>
+                                    <% userPassengers.forEach((passenger) => { %>
+                                        <option value="<%= passenger.passenger_id %>">
+                                            <%= passenger.passenger_first_name %> <%= passenger.passenger_last_name %> <%= passenger.benefit ? ' – ' + passenger.benefit.benefit_name.toLowerCase() : '' %>
+                                        </option>
+                                    <% }); %>
+                                </select>
+                                <button type="button" class="btn btn-outline-primary ms-2 fs-5"
+                                        onclick="addPassengerModal.show()"><b>+</b></button>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            </div>
+            <div class="col">
+                <div class="card sticky-top w-100 m-auto my-3 border-0 rounded-4 shadow p-4"
+                     style="top: 15rem;">
+                    <h6>Обрані місця</h6>
+                    <hr>
+                    <div id="selectedSeats">
+                        <% data.selectedSeats.forEach((seat, index) => { %>
+                            <div class="row mb-2">
+                                <span class="col-8 small"><%= seat.carriageNumber %> вагон, <%= seat.carriageSeatNumber %> місце</span>
+                                <span class="col-4 text-end small"><span
+                                            id="ticket-seat-<%= index %>-price"><%= seat.ticketPrice %></span> ₴</span>
+                            </div>
+                        <% }); %>
+                        <hr>
+                        <div class="row mb-2">
+                            <b class="col-8 small">Усього</b>
+                            <b class="col-4 text-end small"><span
+                                        id="total-price"><%= data.selectedSeats.reduce((acc, s) => acc + s.ticketPrice, 0) %></span>
+                                ₴</b>
+                        </div>
+                        <input type="submit" class="btn btn-primary w-100 rounded-3 mt-3" value="Купити квитки">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+    <div class="modal fade" id="addPassengerModal" tabindex="-1" aria-labelledby="addPassengerModalLabel"
+         aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="addPassengerModalLabel">Додати пасажира</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addPassengerForm" action="/passenger" method="POST">
+                        <div class="mb-3">
+                            <label for="passengerName" class="form-label">Імʼя</label>
+                            <input type="text" class="form-control" id="passengerName" name="firstName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="passengerSurname" class="form-label">Прізвище</label>
+                            <input type="text" class="form-control" id="passengerSurname" name="lastName" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="addBenefit" class="form-label">Пільга</label>
+                            <select class="form-select" id="addBenefit" name="benefitId">
+                                <option value="">Без пільги</option>
+                                <% benefits.forEach(benefit => { %>
+                                    <option value="<%= benefit.benefit_id %>"
+                                            data-document="<%= benefit.document_name %>">
+                                        <%= benefit.benefit_name %>
+                                    </option>
+                                <% }) %>
+                            </select>
+                        </div>
+                        <div class="mb-3" id="addBenefitDocumentField" style="display: none;">
+                            <label id="addBenefitDocumentLabel" class="form-label">Номер пільгового
+                                документа</label>
+                            <input type="text" class="form-control" id="addBenefitDocument" name="benefitDocument">
+                        </div>
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary">Зберегти пасажира</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script src="js/addPassengerForm.js"></script>
+<script>
+
+    const data = <%- JSON.stringify(data) %>;
+    const userPassengers = <%- JSON.stringify(userPassengers) %>;
+    const selectedSeats = <%- JSON.stringify(data.selectedSeats) %>;
+    const discountPercentages = Array(selectedSeats.length).fill(0);
+    const addPassengerModal = new bootstrap.Modal(document.getElementById('addPassengerModal'));
+    const selectElements = document.querySelectorAll('.passenger-select');
+
+    async function handlePassengerSelect(event) {
+        const passengerSeatIndex = +event.target.getAttribute('data-index');
+        const selectedPassengerId = +event.target.value;
+        const selectedPassenger = selectedPassengerId ? userPassengers.find(p => p.passenger_id === selectedPassengerId) : null;
+        const discountContainer = document.getElementById(`passenger-${passengerSeatIndex}-discount`);
+
+        if (selectedPassenger && selectedPassenger.benefit) {
+            const discountPercentage = selectedPassenger.benefit.discount_percentage;
+            discountContainer.innerHTML = `
+                <span class="badge bg-success ms-2">-${discountPercentage}%</span>
+            `;
+            discountPercentages[passengerSeatIndex] = discountPercentage;
+        } else {
+            discountContainer.innerHTML = '';
+            discountPercentages[passengerSeatIndex] = 0;
+        }
+
+        updateTicketPrices();
+
+        const selectedPassengerIds = Array.from(selectElements).map(select => select.value).filter(id => id !== "");
+        selectElements.forEach(select => {
+            const currentValue = select.value;
+
+            Array.from(select.options).forEach(option => {
+                option.disabled = false;
+            });
+
+            Array.from(select.options).forEach(option => {
+                if (selectedPassengerIds.includes(option.value) && option.value !== currentValue) {
+                    option.disabled = true;
+                }
+            });
+        });
+    }
+
+
+    document.querySelectorAll('.passenger-select').forEach(select => {
+        select.addEventListener('change', handlePassengerSelect);
+    });
+
+    function updateTicketPrices() {
+        let totalPrice = 0;
+        selectedSeats.forEach((seat, index) => {
+            const price = seat.ticketPrice * (1 - discountPercentages[index] / 100);
+            document.getElementById(`ticket-seat-${index}-price`).textContent = price;
+            totalPrice += price;
+        });
+        document.getElementById(`total-price`).textContent = totalPrice;
+    }
+
+    document.getElementById("addBenefit").addEventListener("change", () =>
+        toggleBenefitField("addBenefit", "addBenefitDocumentField", "addBenefitDocumentLabel", "addBenefitDocument")
+    );
+
+    document.getElementById('addPassengerForm').addEventListener('submit', async function (event) {
+        event.preventDefault();
+
+        const formData = new FormData(this);
+        const jsonData = {};
+        formData.forEach((value, key) => {
+            jsonData[key] = value;
+        });
+
+        try {
+            const response = await fetch('/passenger', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(jsonData)
+            });
+
+            if (!response.ok) {
+                showErrorAlert('Не вдалося додати пасажира');
+                return;
+            }
+
+            const addedPassenger = (await response.json()).data.passenger;
+            userPassengers.push(addedPassenger);
+
+            const passengerSelects = document.querySelectorAll('.passenger-select');
+            passengerSelects.forEach(select => {
+                const existingOption = Array.from(select.options).find(option => option.value === addedPassenger.id);
+                if (!existingOption) {
+                    const option = document.createElement('option');
+                    option.value = addedPassenger.id;
+                    option.textContent = `${addedPassenger.passenger_first_name} ${addedPassenger.passenger_last_name}` +
+                        (addedPassenger.benefit ? ` – ${addedPassenger.benefit.benefit_name.toLowerCase()}` : '');
+
+                    select.appendChild(option);
+                }
+            });
+
+
+            addPassengerModal.hide();
+            this.reset();
+
+            showSuccessAlert('Пасажир успішно доданий');
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorAlert('Сталася помилка');
+        }
+    });
+
+    document.getElementById('buy-tickets-form').addEventListener('submit', async (event) => {
+        event.preventDefault();
+
+        const tickets = [];
+        selectElements.forEach((element, index) => {
+            tickets.push({
+                passengerId: +element.value,
+                carriageSeatId: selectedSeats[index].carriageSeatId,
+                trainCarriageId: selectedSeats[index].trainCarriageId,
+            });
+        });
+
+        const buyTicketsData = {
+            fromStationId: data.fromStation.station.station_id,
+            toStationId: data.toStation.station.station_id,
+            date: data.date,
+            tickets
+        };
+
+        try {
+            const response = await fetch('/tickets/buy', {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(buyTicketsData)
+            });
+
+            if (!response.ok) {
+                if (response.status === 409) {
+                    showErrorAlert(
+                        `${tickets.length > 1 ? 'Деякі місця' : 'Місце'} вже ${tickets.length > 1 ? 'зайняті' : 'зайняте'}. Оберіть ${tickets.length > 1 ? 'нові місця' : 'нове місце'}.`,
+                        () => {
+                            if (document.referrer) {
+                                const url = new URL(document.referrer);
+                                url.searchParams.set("reload", "true");
+                                window.location.href = url.toString();
+                            }
+                        }
+                    );
+                } else {
+                    showErrorAlert(`Не вдалося купити ${tickets.length > 1 ? 'квитки' : 'квиток'}`);
+                }
+                return;
+            }
+
+            showSuccessAlert(`Купівля ${tickets.length > 1 ? 'квитків' : 'квитка'} успішна`, () => window.location.href = '/profile');
+        } catch (error) {
+            console.error('Error:', error);
+            showErrorAlert('Сталася помилка');
+        }
+    });
+
+    function showErrorAlert(errorMessage, onClose) {
+        Swal.fire({
+            icon: "error",
+            title: errorMessage,
+            willClose: onClose,
+        });
+    }
+
+    function showSuccessAlert(message, onClose) {
+        Swal.fire({
+            icon: "success",
+            title: message,
+            willClose: onClose
+        });
+    }
+</script>
+</body>
+</html>

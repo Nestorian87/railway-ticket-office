@@ -26,6 +26,29 @@
         justify-content: center;
         border-radius: 5px;
         cursor: pointer;
+        position: relative;
+    }
+
+    .seat-top::before {
+        content: '';
+        position: absolute;
+        top: -5px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: inherit;
+        border-radius: 2px;
+    }
+
+    .seat-bottom::after {
+        content: '';
+        position: absolute;
+        bottom: -5px;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background-color: inherit;
+        border-radius: 2px;
     }
 
     .seat-free {
@@ -53,104 +76,206 @@
 <header style="padding-bottom: 60px;">
     <%- include('partials/header'); %>
 </header>
-<main>
-    <div class="container mt-5">
-        <h3 class="text-center">
-            <span><%= fromStation.station.station_name %></span>
-            <i class="bi bi-arrow-right"></i>
-            <span><%= toStation.station.station_name %></span>
-        </h3>
-        <h4 class="text-center">
-            <%= carriageCategory.category_name %>
-        </h4>
-        <div class="text-muted fs-5 text-center">
-            <%= helpers.formatDateWithMonth(new Date(date)) %>, <%= fromStation.departure_time.slice(0, -3) %>
-        </div>
-        <div class="row">
-            <div class="col-md-12 col-sm-12 col-lg-9">
-                <% train.carriages.forEach(carriage => { %>
-                    <div class="card m-auto my-5 border-0 rounded-5 shadow">
-                        <h6 class="mt-4 ms-4">Вагон <%= carriage.carriage_number %> <span
-                                    class="badge bg-dark"><%= helpers.getSeatsLabel(carriage.seats.filter(s => s.is_free === '1').length) %></span>
-                        </h6>
-                        <div class="card-body mw-100 m-auto">
-                            <div class="carriage-container border rounded-3 p-4 mb-4">
-                                <div class="grid-container"
-                                     style="grid-template-columns: repeat(<%= carriage.carriage.column_count %>, 40px);">
-                                    <% for (let row = 1; row <= carriage.carriage.row_count; row++) { %>
-                                        <% for (let col = 1; col <= carriage.carriage.column_count; col++) { %>
-                                            <%
-                                                const seat = carriage.seats.find(
-                                                        seat => seat.row_number === row && seat.column_number === col
-                                                );
-                                            if (seat) {
-                                            %>
-                                                <div data-seat-id="<%= seat.carriage_seat_id %>"
-                                                     data-carriage-number="<%= carriage.carriage_number %>"
-                                                     data-seat-number="<%= seat.seat_number %>"
-                                                     class="seat <%= seat.is_free === '1' ? 'seat-free' : 'seat-occupied' %>">
-                                                    <%= seat.seat_number %>
-                                                </div>
-                                            <% } else { %>
-                                                <div class="empty-space"></div>
+<main class="container mt-4">
+    <h3 class="text-center">
+        <span><%= fromStation.station.station_name %></span>
+        <i class="bi bi-arrow-right"></i>
+        <span><%= toStation.station.station_name %></span>
+    </h3>
+    <div class="text-muted fs-5 text-center">
+        <%= helpers.formatDateWithMonth(new Date(date)) %>, <%= fromStation.departure_time.slice(0, -3) %>
+    </div>
+    <ul class="nav nav-pills mt-2" id="pills-tab" role="tablist">
+        <% carriageCategories.forEach(category => {
+            const isSelected = category.carriage_category_id === +selectedCarriageCategoryId
+        %>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link btn-outline-primary me-2 <%= isSelected ? 'active' : '' %>"
+                    id="pills-category-<%= category.carriage_category_id %>-tab"
+                    data-bs-toggle="pill"
+                    data-bs-target="#pills-category-<%= category.carriage_category_id %>"
+                    type="button" role="tab" aria-controls="pills-category-<%= category.carriage_category_id %>"
+                    aria-selected="true"><%= category.category_name %>
+            </button>
+        </li>
+        <% }); %>
+    </ul>
+    <div class="row">
+        <div class="tab-content col-md-12 col-sm-12 col-lg-9" id="pills-tabContent">
+            <% carriageCategories.forEach(carriageCategory => {
+                const isSelected = carriageCategory.carriage_category_id === +selectedCarriageCategoryId
+            %>
+            <div class="tab-pane fade <%= isSelected ? 'show active' : '' %>"
+                 id="pills-category-<%= carriageCategory.carriage_category_id %>" role="tabpanel"
+                 aria-labelledby="pills-category-<%= carriageCategory.carriage_category_id %>"
+                 tabindex="0">
+                <div class="mt-5">
+                    <% train.carriages.filter(c =>
+                            c.carriage.carriageCategory.carriage_category_id === carriageCategory.carriage_category_id
+                    ).forEach(carriage => { %>
+                        <div class="card m-auto my-5 border-0 rounded-5 shadow">
+                            <h6 class="mt-4 ms-4">Вагон <%= carriage.carriage_number %>
+                                <span class="badge bg-dark"><%= helpers.getSeatsLabel(carriage.seats.filter(s => s.is_free === '1').length) %></span>
+                            </h6>
+                            <div class="card-body mw-100 m-auto">
+                                <div class="carriage-container border rounded-3 p-4 mb-4">
+                                    <div class="grid-container"
+                                         style="grid-template-columns: repeat(<%= carriage.carriage.column_count %>, 40px);">
+                                        <% for (let row = 1; row <= carriage.carriage.row_count; row++) { %>
+                                            <% for (let col = 1; col <= carriage.carriage.column_count; col++) { %>
+                                                <%
+                                                    const seat = carriage.seats.find(
+                                                            seat => seat.row_number === row && seat.column_number === col
+                                                    );
+                                                if (seat) {
+                                                %>
+                                                    <div data-seat-id="<%= seat.carriage_seat_id %>"
+                                                         data-carriage-number="<%= carriage.carriage_number %>"
+                                                         data-seat-number="<%= seat.seat_number %>"
+                                                         data-train-carriage-id="<%= carriage.train_carriage_id %>"
+                                                         class="seat <%= seat.is_free === '1' ? 'seat-free' : 'seat-occupied' %> <%= seat.seat_type === 'TOP' ? 'seat-top' : seat.seat_type === 'BOTTOM' ? 'seat-bottom' : '' %>">
+                                                        <%= seat.seat_number %>
+                                                    </div>
+                                                <% } else { %>
+                                                    <div class="empty-space"></div>
+                                                <% } %>
                                             <% } %>
                                         <% } %>
-                                    <% } %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
-                <% }) %>
-            </div>
-            <div class="col">
-                <div class="card sticky-top col-md-12 col-sm-12 col-lg-9 m-auto my-5 border-0 rounded-4 shadow p-4"
-                     style="top: 10rem;">
-                    <p id="noSeatsText">Виберіть до 4 місць</p>
-                    <div id="selectedSeats"></div>
+                    <% }) %>
+
                 </div>
+            </div>
+            <% }); %>
+        </div>
+
+        <div class="col">
+            <div class="card sticky-top w-100 m-auto my-5 border-0 rounded-4 shadow p-4"
+                 style="top: 15rem;">
+                <h6 id="noSeatsText">Виберіть до 4 місць</h6>
+                <div id="selectedSeats"></div>
             </div>
         </div>
     </div>
     <script>
+        const train = <%- JSON.stringify(train) %>;
+        const carriageCategories = <%- JSON.stringify(carriageCategories) %>;
+        const fromStation = <%- JSON.stringify(fromStation) %>;
+        const toStation = <%- JSON.stringify(toStation) %>;
+        const date = '<%= date %>';
+
         const maxSelectedSeats = 4;
+        const selectedSeats = [];
 
-        document.addEventListener('click', (event) => {
-
-            const target = event.target;
-            const selectedSeats = getSelectedSeats()
-            if (target.classList.contains('seat-free') && selectedSeats.length < maxSelectedSeats) {
-                target.classList.remove('seat-free');
-                target.classList.add('seat-selected');
-            } else if (target.classList.contains('seat-selected')) {
-                target.classList.remove('seat-selected');
-                target.classList.add('seat-free');
-            }
-            showSelectedSeats();
-
-        });
-
-        function getSelectedSeats() {
-            return [...document.querySelectorAll('.seat-selected')].map(el => {
-                return {
-                    carriageSeatId: +el.getAttribute('data-seat-id'),
-                    carriageNumber: +el.getAttribute('data-carriage-number'),
-                    carriageSeatNumber: +el.getAttribute('data-seat-number'),
-                }
-            });
+        if (new URLSearchParams(window.location.search).has("reload")) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete("reload");
+            const cleanUrl = url.search ? url.toString() : url.origin + url.pathname;
+            window.history.replaceState(null, "", cleanUrl);
+            window.location.reload();
         }
 
+
+        document.querySelectorAll('.seat').forEach(element => {
+            element.addEventListener('click', event => {
+                const target = event.target;
+
+                const seatId = +target.getAttribute('data-seat-id');
+                const carriageNumber = +target.getAttribute('data-carriage-number');
+                const seatNumber = +target.getAttribute('data-seat-number');
+                const trainCarriageId = +target.getAttribute('data-train-carriage-id');
+
+
+                if (target.classList.contains('seat-free') && selectedSeats.length < maxSelectedSeats) {
+                    target.classList.remove('seat-free');
+                    target.classList.add('seat-selected');
+
+                    selectedSeats.push({
+                        carriageSeatId: seatId,
+                        carriageNumber: carriageNumber,
+                        carriageSeatNumber: seatNumber,
+                        trainCarriageId: trainCarriageId,
+                        ticketPrice: +getCarriageCategoryForSeat(seatId).total_ticket_price
+                    });
+                } else if (target.classList.contains('seat-selected')) {
+                    target.classList.remove('seat-selected');
+                    target.classList.add('seat-free');
+
+                    const index = selectedSeats.findIndex(seat => seat.carriageSeatId === seatId);
+                    if (index !== -1) {
+                        selectedSeats.splice(index, 1);
+                    }
+                }
+                showSelectedSeats();
+            });
+        });
+
         function showSelectedSeats() {
-            const selectedSeats = getSelectedSeats();
             const noSeatsText = document.getElementById('noSeatsText');
             noSeatsText.style.display = selectedSeats.length > 0 ? 'none' : 'block';
 
             const seatsBlock = document.getElementById('selectedSeats');
-            seatsBlock.innerHTML = '';
-            selectedSeats.forEach(seat => {
+            seatsBlock.innerHTML = selectedSeats.length > 0 ? '<h6>Обрані місця</h6><hr>' : '';
+            selectedSeats.forEach((seat, i) => {
                 seatsBlock.innerHTML += `
-                    <p>${seat.carriageNumber} вагон, ${seat.carriageSeatNumber} місце</p>
+                    <div class="row mb-2">
+                        <span class="col-7 small">${seat.carriageNumber} вагон, ${seat.carriageSeatNumber} місце</span>
+                        <span class="col-3 small">${seat.ticketPrice} ₴</span>
+                        <span class="col-2 bi bi-x d-flex align-items-center text-end fs-4" onclick="removeSelectedSeat(${i})"></span>
+                    </div>
                 `
             });
+            if (selectedSeats.length > 0) {
+                seatsBlock.innerHTML += `
+                <hr>
+                <div class="row mb-2">
+                    <b class="col-7 small">Усього</b>
+                    <b class="col-5 small">${selectedSeats.reduce((acc, s) => acc + s.ticketPrice, 0)} ₴</b>
+                </div>
+                <button class="btn btn-primary w-100 rounded-3 mt-3" onclick="navigateWithPost('/tickets/passengers', { selectedSeats, fromStation, toStation, date })">Перейти до пасажирів</button>
+                `
+            }
+        }
+
+        function removeSelectedSeat(index) {
+            const removedSeat = selectedSeats.splice(index, 1)[0];
+            console.log(removedSeat);
+            const selectedSeatElement = document.querySelector(`.seat[data-seat-id="${removedSeat.carriageSeatId}"]`);
+            selectedSeatElement.classList.remove('seat-selected');
+            selectedSeatElement.classList.add('seat-free');
+            console.log(selectedSeatElement);
+            showSelectedSeats();
+        }
+
+        function getCarriageCategoryForSeat(carriageSeatId) {
+            for (const carriage of train.carriages) {
+                const seat = carriage.seats.find(seat => seat.carriage_seat_id === carriageSeatId);
+                if (seat) {
+                    const carriageCategoryId = carriage.carriage.carriageCategory.carriage_category_id;
+                    return carriageCategories.find(c => +c.carriage_category_id === carriageCategoryId);
+                }
+            }
+            return null;
+        }
+
+        function navigateWithPost(url, data) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = url;
+
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'data';
+            input.value = JSON.stringify(data);
+            form.appendChild(input);
+
+            document.body.appendChild(form);
+            form.submit();
+
+            document.body.removeChild(form);
         }
     </script>
 </main>

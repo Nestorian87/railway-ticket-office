@@ -1,11 +1,11 @@
 import express from "express";
 import {check} from "express-validator";
 import {auth} from "../middlewares/authMiddleware";
-import {addPassenger, deletePassenger, editPassenger} from "../controllers/passengerController";
+import {addPassenger, deletePassenger, editPassenger, getUserPassengers} from "../controllers/passengerController";
 
 const router = express.Router();
 
-router.post("/add-passenger",
+router.post("/passenger",
     [
         check("firstName", "Імʼя не може бути пустим").not().isEmpty(),
         check("lastName", "Прізвище не може бути пустим").not().isEmpty(),
@@ -15,9 +15,8 @@ router.post("/add-passenger",
     addPassenger
 );
 
-router.post("/edit-passenger",
+router.put("/passenger/:id",
     [
-        check("passengerId", "ID пасажира є обов'язковим").not().isEmpty(),
         check("firstName", "Імʼя не може бути пустим").not().isEmpty(),
         check("lastName", "Прізвище не може бути пустим").not().isEmpty(),
         check("benefitDocument", "Номер пільгового документа не може бути пустим")
@@ -27,7 +26,9 @@ router.post("/edit-passenger",
     auth,
     editPassenger
 );
-router.delete("/delete-passenger/:id", auth, deletePassenger);
+router.delete("/passenger/:id", auth, deletePassenger);
+
+router.get('/passengers', auth, getUserPassengers);
 
 
 

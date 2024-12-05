@@ -8,6 +8,9 @@ import {UserExistsError} from "../utils/errors/UserExistsError";
 import JwtService from "../services/jwtService";
 import {IncorrectPasswordError} from "../utils/errors/IncorrectPasswordError";
 import {NotFoundError} from "../utils/errors/NotFoundError";
+import {TicketService} from "../services/ticketService";
+import helpers from "../utils/helpers";
+import {PassengerService} from "../services/passengerService";
 
 export async function renderIndex(req: UserRequest, res: express.Response) {
     res.render('index', {
@@ -18,8 +21,9 @@ export async function renderIndex(req: UserRequest, res: express.Response) {
 
 export async function renderProfile(req: UserRequest, res: express.Response) {
     res.render('profile', {
-        user: await UserService.getUserWithPassengers(req.userId!),
-        benefits: await BenefitService.getAllBenefits()
+        user: await UserService.getUser(req.userId!),
+        benefits: await BenefitService.getAllBenefits(),
+        helpers
     });
 }
 
@@ -130,5 +134,3 @@ export async function deleteProfile(req: UserRequest, res: express.Response) {
         res.status(500).json({message: "Помилка сервера"});
     }
 }
-
-

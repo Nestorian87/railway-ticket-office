@@ -3,17 +3,13 @@ import {TrainCarriage} from "../models/TrainCarriage";
 
 export const TrainCarriageRepository = AppDataSource.getRepository(TrainCarriage).extend({
 
-    async findForTrainByCategory(
-       trainId: number,
-       carriageCategoryId: number,
+    async findForTrain(
+       trainId: number
     ): Promise<TrainCarriage[]> {
         return this.find({
             where: {
                 train: {
                     train_id: trainId
-                },
-                carriage: {
-                    carriageCategory: { carriage_category_id: carriageCategoryId }
                 }
             },
             order: {

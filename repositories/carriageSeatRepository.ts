@@ -11,7 +11,6 @@ export const CarriageSeatRepository = AppDataSource.getRepository(CarriageSeat).
 
     async findForTrain(
         trainId: number,
-        carriageCategoryId: number,
         date: string,
         fromStationId: number,
         toStationId: number
@@ -25,20 +24,18 @@ export const CarriageSeatRepository = AppDataSource.getRepository(CarriageSeat).
                         .select('tk.carriage_seat_id, tc.carriage_number')
                         .from(Ticket, 'tk')
                         .innerJoin('tk.trainCarriage', 'tc', 'tk.train_carriage_id = tc.train_carriage_id')
-                        .innerJoin('tc.carriage', 'c', 'tc.carriage_id = c.carriage_id AND c.carriage_category_id = :carriageCategoryId')
-                        .innerJoin('tk.departureStation', 'dep_s', 'tk.departure_station_id = dep_s.station_id')
-                        .innerJoin('tk.arrivalStation', 'arr_s', 'tk.arrival_station_id = arr_s.station_id')
-                        .innerJoin(TrainStation, 'ts_dep', 'ts_dep.train_id = :trainId AND ts_dep.station_id = dep_s.station_id')
-                        .innerJoin(TrainStation, 'ts_arr', 'ts_arr.train_id = :trainId AND ts_arr.station_id = arr_s.station_id')
-                        .where('tk.trip_start_date = :date', { date })
-                        .andWhere('ts_arr.station_number > (SELECT ts.station_number FROM train_station ts WHERE ts.train_id = :trainId AND ts.station_id = :fromStationId)', { fromStationId })
-                        .andWhere('ts_dep.station_number < (SELECT ts.station_number FROM train_station ts WHERE ts.train_id = :trainId AND ts.station_id = :toStationId)', { toStationId });
+                        .innerJoin('tc.carriage', 'c', 'tc.carriage_id = c.carriage_id')
+                        .innerJoin('tk.departureStation', 'dep_s', 'tk.departure_station_id = dep_s.train_station_id')
+                        .innerJoin('tk.arrivalStation', 'arr_s', 'tk.arrival_station_id = arr_s.train_station_id')
+                        .where('tc.train_id = :trainId')
+                        .andWhere('tk.trip_start_date = :date', { date })
+                        .andWhere('arr_s.station_number > (SELECT ts.station_number FROM train_station ts WHERE ts.train_id = :trainId AND ts.station_id = :fromStationId)', { fromStationId })
+                        .andWhere('dep_s.station_number < (SELECT ts.station_number FROM train_station ts WHERE ts.train_id = :trainId AND ts.station_id = :toStationId)', { toStationId });
                 },
                 'occupied_seat',
                 'cs.carriage_seat_id = occupied_seat.carriage_seat_id AND tc.carriage_number = occupied_seat.carriage_number',
             )
             .where('tc.train_id = :trainId', { trainId })
-            .andWhere('c.carriage_category_id = :carriageCategoryId', { carriageCategoryId })
             .select([
                 'cs.carriage_seat_id AS carriage_seat_id',
                 'cs.seat_number AS seat_number',

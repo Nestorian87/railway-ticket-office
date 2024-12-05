@@ -9,6 +9,18 @@ import {TrainCarriageRepository} from "../repositories/trainCarriageRepository";
 import {CarriageSeatRepository} from "../repositories/carriageSeatRepository";
 import {TrainCarriageWithSeats} from "../interfaces/TrainCarriageWithSeats";
 import {TrainWithCarriagesAndSeats} from "../interfaces/TrainWithCarriagesAndSeats";
+import {BuyTicketsData} from "../interfaces/BuyTicketsData";
+import {TrainCarriageService} from "./trainCarriageService";
+import {TicketRepository} from "../repositories/ticketRepository";
+import {Ticket} from "../models/Ticket";
+import {CarriageCategoryService} from "./carriageCategoryService";
+import {Station} from "../models/Station";
+import {User} from "../models/User";
+import {Passenger} from "../models/Passenger";
+import {CarriageSeat} from "../models/CarriageSeat";
+import {TrainCarriage} from "../models/TrainCarriage";
+import {Fare} from "../models/Fare";
+import {SeatsAreNotFreeError} from "../utils/errors/SeatsAreNotFreeError";
 
 export const TrainService = {
 
@@ -61,7 +73,6 @@ export const TrainService = {
 
     async getTrainWithCarriagesAndSeats(
         trainId: number,
-        carriageCategoryId: number,
         query: SearchQuery
     ): Promise<TrainWithCarriagesAndSeats> {
         const train = await TrainRepository.findWithTrainStations(trainId) as TrainWithCarriagesAndSeats;
@@ -78,10 +89,9 @@ export const TrainService = {
             throw new NotFoundError("Train is not found");
         }
 
-        const carriages = await TrainCarriageRepository.findForTrainByCategory(trainId, carriageCategoryId) as TrainCarriageWithSeats[];
+        const carriages = await TrainCarriageRepository.findForTrain(trainId) as TrainCarriageWithSeats[];
         const seats = await CarriageSeatRepository.findForTrain(
             trainId,
-            carriageCategoryId,
             query.date,
             query.fromStationId,
             query.toStationId
@@ -95,5 +105,86 @@ export const TrainService = {
 
         return train;
     },
+
+    async buyTickets(
+        data: BuyTicketsData,
+        userId: number,
+    ) {
+        const searchQuery: SearchQuery = {
+            fromStationId: data.fromStationId,
+            toStationId: data.toStationId,
+            date: data.date,
+        }
+
+        const trainCarriages = await Promise.all(
+            data.tickets.map(ticket =>
+                TrainCarriageService.getTrainCarriageWithTrainAndCarriage(ticket.trainCarriageId)
+            )
+        );
+
+        const trainId = trainCarriages[0]!.train.train_id;
+
+        if (trainCarriages.some(carriage => carriage?.train.train_id !== trainId)) {
+            throw new Error("Not all tickets belong to the same train");
+        }
+
+        const train = await TrainService.getTrainWithCarriagesAndSeats(trainId, searchQuery);
+
+        const isSeatFree = (trainCarriageId: number, carriageSeatId: number) => {
+            const carriage = train.carriages.find(c => c.train_carriage_id === trainCarriageId);
+            if (!carriage) {
+                return false;
+            }
+
+            const seat = carriage.seats.find(s => s.carriage_seat_id === carriageSeatId);
+            return seat?.is_free == true;
+        };
+
+        if (
+            data.tickets.some(ticket =>
+                !isSeatFree(ticket.trainCarriageId, ticket.carriageSeatId)
+            )
+        ) {
+            throw new SeatsAreNotFreeError("Місце або місця вже зайняті");
+        }
+
+        const carriageCategories = await CarriageCategoryRepository.findForTrainsBetweenTwoStations(
+            [trainId],
+            data.fromStationId,
+            data.toStationId,
+            data.date
+        );
+
+        const boughtTickets: Promise<Ticket>[] = [];
+
+        for (const ticket of data.tickets) {
+            const fareId = carriageCategories.find(cc => {
+                    const carriage = train.carriages.find(c =>
+                        c.train_carriage_id == ticket.trainCarriageId
+                    );
+
+                    return cc.carriage_category_id == carriage?.carriage.carriageCategory.carriage_category_id
+            })?.fare_id;
+
+            if (!fareId) {
+                throw new Error("Fare not found");
+            }
+
+            const ticketEntity = new Ticket(
+                new Date(data.date),
+                train.trainStations.find(s => s.station.station_id == data.fromStationId)!,
+                train.trainStations.find(s => s.station.station_id == data.toStationId)!,
+                new User(userId),
+                new Passenger(ticket.passengerId),
+                new CarriageSeat(ticket.carriageSeatId),
+                new TrainCarriage(ticket.trainCarriageId),
+                new Fare(fareId)
+            );
+            const boughtTicket = TicketRepository.save(ticketEntity);
+            boughtTickets.push(boughtTicket);
+        }
+
+        return await Promise.all(boughtTickets);
+    }
 }
 

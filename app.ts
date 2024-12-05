@@ -7,6 +7,7 @@ import userRoutes from "./routes/userRoutes";
 import stationRoutes from "./routes/stationRoutes";
 import trainRoutes from "./routes/trainRoutes";
 import {AppDataSource} from "./config/database";
+import ticketRoutes from "./routes/ticketRoutes";
 
 const app = express();
 
@@ -20,6 +21,7 @@ app.use(userRoutes);
 app.use(passengerRoutes);
 app.use(stationRoutes);
 app.use(trainRoutes);
+app.use(ticketRoutes);
 
 AppDataSource.initialize()
     .catch((error) => console.log(error))

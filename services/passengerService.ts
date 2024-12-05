@@ -20,7 +20,10 @@ export const PassengerService = {
         passenger.benefit_document = benefitDocument || null;
         passenger.user = new User(userId)
 
-        return await PassengerRepository.save(passenger);
+        const addedPassenger = await PassengerRepository.save(passenger);
+        return (await PassengerRepository.findOne(
+            { where: { passenger_id: addedPassenger.passenger_id }, relations: ['benefit'] }
+        ))! ;
     },
 
     async editPassenger(
@@ -56,5 +59,18 @@ export const PassengerService = {
         if (result.affected == 0) {
             throw new NotFoundError("Passenger not found");
         }
+    },
+
+    async getUserPassengers(userId: number): Promise<Passenger[]> {
+        return await PassengerRepository.find(
+            {
+                where: {
+                    user: {
+                        user_id: userId
+                    }
+                },
+                relations: ['benefit']
+            }
+        )
     }
 }

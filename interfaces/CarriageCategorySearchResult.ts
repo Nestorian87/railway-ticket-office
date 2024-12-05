@@ -3,5 +3,6 @@ export interface CarriageCategorySearchResult {
     carriage_category_id: number,
     category_name: string,
     total_ticket_price: number,
-    free_seats_count: number
+    free_seats_count: number,
+    fare_id: number
 }

@@ -5,9 +5,31 @@ import { Passenger } from './Passenger';
 import { CarriageSeat } from './CarriageSeat';
 import { TrainCarriage } from './TrainCarriage';
 import {Fare} from "./Fare";
+import {TrainStation} from "./TrainStation";
 
 @Entity("ticket")
 export class Ticket {
+
+    constructor(
+        trip_start_date: Date,
+        departureStation: TrainStation,
+        arrivalStation: TrainStation,
+        user: User,
+        passenger: Passenger,
+        carriageSeat: CarriageSeat,
+        trainCarriage: TrainCarriage,
+        fare: Fare
+    ) {
+        this.trip_start_date = trip_start_date;
+        this.departureStation = departureStation;
+        this.arrivalStation = arrivalStation;
+        this.user = user;
+        this.passenger = passenger;
+        this.carriageSeat = carriageSeat;
+        this.trainCarriage = trainCarriage;
+        this.fare = fare;
+    }
+
     @PrimaryGeneratedColumn()
     ticket_id!: number;
 
@@ -17,13 +39,13 @@ export class Ticket {
     @Column({ type: 'date' })
     trip_start_date!: Date;
 
-    @ManyToOne(() => Station, (station) => station.departureTickets, { onDelete: 'CASCADE' })
+    @ManyToOne(() => TrainStation, (station) => station.departureTickets, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'departure_station_id' })
-    departureStation!: Station;
+    departureStation!: TrainStation;
 
-    @ManyToOne(() => Station, (station) => station.arrivalTickets, { onDelete: 'CASCADE' })
+    @ManyToOne(() => TrainStation, (station) => station.arrivalTickets, { onDelete: 'CASCADE' })
     @JoinColumn({ name: 'arrival_station_id' })
-    arrivalStation!: Station;
+    arrivalStation!: TrainStation;
 
     @ManyToOne(() => User, (user) => user.tickets, { onDelete: 'SET NULL', nullable: true })
     @JoinColumn({ name: 'user_id' })
