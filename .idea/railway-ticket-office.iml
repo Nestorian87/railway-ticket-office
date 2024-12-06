@@ -12,5 +12,6 @@
     <orderEntry type="library" name="bootstrap-icons" level="application" />
     <orderEntry type="library" name="sweetalert2" level="application" />
     <orderEntry type="library" name="vis-network" level="application" />
+    <orderEntry type="library" name="range-slider-input" level="application" />
   </component>
 </module>

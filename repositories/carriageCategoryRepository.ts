@@ -8,7 +8,9 @@ export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCa
         trainIds: number[],
         fromStationId: number,
         toStationId: number,
-        date: string
+        date: string,
+        minPrice: number | null = null,
+        maxPrice: number | null = null
     ): Promise<CarriageCategorySearchResult[]> {
 
         const carriageCategoriesQuery = `
@@ -65,11 +67,13 @@ export const CarriageCategoryRepository = AppDataSource.getRepository(CarriageCa
                            GROUP BY t.train_id) distance ON distance.train_id = tc.train_id
             WHERE t.train_id IN (${trainIds.join(",")})
               AND distance.total_distance BETWEEN f.min_distance_km AND f.max_distance_km
+               ${minPrice && maxPrice ? 'AND (f.ticket_price + f.seat_reservation_price) BETWEEN ? AND ?' : '' }
             ORDER BY total_ticket_price DESC
         `;
 
-        return await this.query(carriageCategoriesQuery,
-            [date, fromStationId, toStationId, fromStationId, toStationId]
+        return await this.query(
+            carriageCategoriesQuery,
+            [date, fromStationId, toStationId, fromStationId, toStationId, minPrice, maxPrice].filter(p => p !== null)
         ) as unknown as CarriageCategorySearchResult[];
     }
 })

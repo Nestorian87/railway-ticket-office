@@ -28,7 +28,7 @@
         </div>
         <hr>
     </section>
-    <div class="container mt-5">
+    <div class="container-fluid mt-5">
         <ul class="nav nav-tabs" id="myTab" role="tablist">
             <li class="nav-item" role="presentation">
                 <button class="nav-link active" id="tickets-tab" data-bs-toggle="tab" data-bs-target="#tickets"
@@ -44,10 +44,94 @@
 
         <div class="tab-content mt-4" id="myTabContent">
             <div class="tab-pane fade show active" id="tickets" role="tabpanel" aria-labelledby="tickets-tab">
-                <section class="container text-center">
+                <section class="text-center">
                     <h3>Мої квитки</h3>
-                    <div id="tickets-container"></div>
+                    <div class="row justify-content-center mb-4">
+                        <div class="col-md-8">
+                            <div class="card p-4" style="border-radius: 15px; background-color: #f8f9fa;">
+                                <div class="card-body">
+                                    <h5 class="text-center mb-4">Пошук квитків</h5>
+                                    <form id="ticketSearchForm">
+                                        <div class="row g-2 align-items-center justify-content-center">
+                                            <div class="col-md-3 position-relative">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="passengerLastName"
+                                                           placeholder="Прізвище пасажира">
+                                                    <label for="passengerName">Прізвище пасажира</label>
+                                                </div>
+                                            </div>
+
+                                            <input type="hidden" name="fromStationId" id="fromStationId">
+                                            <input type="hidden" name="toStationId" id="toStationId">
+
+                                            <div class="col-md-3 position-relative">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="fromStationInput"
+                                                           placeholder="Станція відправлення"
+                                                           autocomplete="off">
+                                                    <label for="fromStationInput">Станція відправлення</label>
+                                                </div>
+                                                <ul class="dropdown-menu w-100" id="fromStationDropdown"
+                                                    style="max-height: 200px; overflow-y: auto;">
+                                                </ul>
+                                            </div>
+
+                                            <div class="col-md-3 position-relative">
+                                                <div class="form-floating">
+                                                    <input type="text" class="form-control" id="toStationInput"
+                                                           placeholder="Станція прибуття"
+                                                           autocomplete="off">
+                                                    <label for="toStationInput">Станція прибуття</label>
+                                                </div>
+                                                <ul class="dropdown-menu w-100" id="toStationDropdown"
+                                                    style="max-height: 200px; overflow-y: auto;">
+                                                </ul>
+                                            </div>
+
+                                            <div class="col-md-3 d-flex align-items-end">
+                                                <button type="submit" class="btn btn-primary w-100" style="height: 56px;">Знайти</button>
+                                            </div>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row container m-auto">
+                        <div class="col-md-4" id="sort-filter-block">
+                            <div class="card p-3" style="border-radius: 15px; background-color: #f8f9fa;">
+                                <div class="card-body">
+                                    <div class="form-floating">
+                                        <select class="form-select mb-2" id="ticketSort">
+                                            <option value="new_first">Спочатку нові</option>
+                                            <option value="old_first">Спочатку старі</option>
+                                            <option value="cheap_first">Спочатку дешеві</option>
+                                            <option value="expensive_first">Спочатку дорогі</option>
+                                        </select>
+                                        <label for="ticketSort">Сортування</label>
+                                    </div>
+
+                                    <div class="form-floating mb-2">
+                                        <select class="form-select" id="ticketValidity">
+                                            <option value="">Усі</option>
+                                            <option value="valid">Дійсні</option>
+                                            <option value="expired">Використані</option>
+                                        </select>
+                                        <label for="ticketValidity">Дійсність квитка</label>
+                                    </div>
+
+                                    <div class="form-floating">
+                                        <select class="form-select" id="trainCategory"></select>
+                                        <label for="trainCategory">Категорія поїзда</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tickets-container" class="m-auto mt-4 col-md-8"></div>
+                    </div>
                 </section>
+
             </div>
 
             <div class="tab-pane fade" id="passengers" role="tabpanel" aria-labelledby="passengers-tab">
@@ -153,7 +237,8 @@
                             </select>
                         </div>
                         <div class="mb-3" id="editBenefitDocumentField" style="display: none;">
-                            <label id="editBenefitDocumentLabel" for="editBenefitDocument" class="form-label">Номер пільгового документа</label>
+                            <label id="editBenefitDocumentLabel" for="editBenefitDocument" class="form-label">Номер
+                                пільгового документа</label>
                             <input type="text" class="form-control" id="editBenefitDocument" name="benefitDocument">
                         </div>
                         <div class="d-grid mt-4">
@@ -231,12 +316,15 @@
 </main>
 <script src="js/phoneNumberForm.js"></script>
 <script src="js/addPassengerForm.js"></script>
+<script src="js/searchTrainsForm.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
     <%- helpers.formatDateWithMonth.toString() %>
     <%- helpers.formatDateWithMonthAndYear.toString() %>
     <%- helpers.formatPrice.toString() %>
+
+    const stations = <%- JSON.stringify(stations) %>;
 
     const addPassengerModal = new bootstrap.Modal(document.getElementById('addPassengerModal'));
     const editPassengerModal = new bootstrap.Modal(document.getElementById('editPassengerModal'));
@@ -324,7 +412,7 @@
             });
 
             if (response.ok) {
-                await Promise.all([loadPassengers(), loadTickets()]);
+                await Promise.all([loadPassengers(), searchTickets()]);
                 deletePassengerModal.hide();
             } else {
                 const errorData = await response.json();
@@ -359,7 +447,7 @@
                 showErrorAlert(errorData.errors.map(e => e.msg).join('<br>') || "Помилка при зміні пасажира");
                 return;
             }
-            await Promise.all([loadPassengers(), loadTickets()]);
+            await Promise.all([loadPassengers(), searchTickets()]);
             editPassengerModal.hide();
         } catch (error) {
             console.error(error);
@@ -423,7 +511,7 @@
             let html = '';
 
             passengers.forEach((passenger) => {
-               html += `
+                html += `
                     <tr>
                         <td>${passenger.passenger_first_name}</td>
                         <td>${passenger.passenger_last_name}</td>
@@ -450,15 +538,56 @@
         }
     }
 
-    async function loadTickets() {
-        const response = await fetch('/tickets');
+    let lastSearchParams = {
+        passengerLastName: null,
+        fromStationId: null,
+        toStationId: null,
+    }
+
+    async function searchTickets(applyFilters = false) {
+        const passengerLastName = applyFilters ? lastSearchParams.passengerLastName : document.getElementById('passengerLastName').value;
+        const fromStationId = applyFilters ? lastSearchParams.fromStationId : document.getElementById('fromStationId').value;
+        const toStationId = applyFilters ? lastSearchParams.toStationId : document.getElementById('toStationId').value;
+        const sortCriteria = document.getElementById('ticketSort').value;
+
+        const ticketValidity = document.getElementById('ticketValidity').value;
+        const trainCategoryId = document.getElementById('trainCategory').value;
+
+        lastSearchParams.passengerLastName = passengerLastName;
+        lastSearchParams.fromStationId = fromStationId;
+        lastSearchParams.toStationId = toStationId;
+
+        const searchUrlPart = `/tickets?passengerLastName=${passengerLastName}&fromStationId=${fromStationId}&toStationId=${toStationId}&sortCriteria=${sortCriteria}`;
+        const filterUrlParams = applyFilters ? `${ticketValidity ? `&ticketValidity=${ticketValidity}` : ''}&trainCategoryId=${trainCategoryId}` : '';
+
+        const response = await fetch(`${searchUrlPart}${filterUrlParams}`);
         if (response.ok) {
             const tickets = (await response.json()).data;
             let html = '';
             let lastDate = null;
 
+            if (!applyFilters) {
+                document.getElementById('trainCategory').innerHTML =
+                    `<option value=''>Усі категорії</option>` +
+                    Array.from(new Map(tickets.map(t => [t.train_category_id, t])).values())
+                        .map(t => `<option value='${t.train_category_id}'>${t.train_category_full_name}</option>`)
+                        .join('');
+            }
+
+            const sortFilterBlock = document.getElementById('sort-filter-block');
             if (tickets.length === 0) {
-                html = '<p>Немає куплених квитків</p>'
+                sortFilterBlock.style.display = 'none';
+                html = `
+                    <div class="row justify-content-center">
+                        <div class="col-md-12">
+                            <div class="alert alert-secondary text-center">
+                                <span>Квитків не знайдено</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                sortFilterBlock.style.display = 'block';
             }
 
             tickets.forEach((ticket) => {
@@ -472,7 +601,7 @@
                     lastDate = formattedDate;
                 }
                 html += `
-                    <div class="train-card col-md-8 m-auto rounded-5 mb-3 shadow-sm">
+                    <div class="train-card col-md-12 m-auto rounded-5 mb-3 shadow-sm">
                         <div class="content flex-grow-1">
                             <div class="header d-flex justify-content-center">
                                 <div class="train-number">${ticket.train_number}</div>
@@ -520,8 +649,26 @@
     }
 
     setupPhoneNumberForm(document.getElementById('editProfilePhoneNumber'), document.getElementById('editProfileForm'));
+
+    document.getElementById('ticketSearchForm').addEventListener('submit', e => {
+        e.preventDefault();
+        searchTickets();
+    });
+
+    document.getElementById('ticketSort').addEventListener('change', e => {
+        searchTickets(true);
+    });
+
+    document.getElementById('ticketValidity').addEventListener('change', e => {
+        searchTickets(true);
+    });
+
+    document.getElementById('trainCategory').addEventListener('change', e => {
+        searchTickets(true);
+    });
+
     loadPassengers();
-    loadTickets();
+    searchTickets();
 </script>
 </body>
 </html>

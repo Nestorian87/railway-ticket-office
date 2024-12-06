@@ -9,134 +9,490 @@
 <body class="bg-light">
 <header style="padding-bottom: 60px;">
     <%- include('partials/header'); %>
+    <style>
+        #price-range-slider .range-slider__thumb {
+            width: 15px;
+            height: 15px;
+            background-color: #2a479f;
+        }
+
+        #price-range-slider .range-slider__range {
+            background-color: #2a479f;
+        }
+    </style>
 </header>
 <main>
-    <div class="container-fluid my-4">
+    <div class="container-fluid my-4 d-flex flex-column" style="height: 90vh;">
+        <div class="card p-3 col-lg-10 col-xl-8 col-md-12 mb-3 m-auto"
+             style="border-radius: 15px; background-color: #f8f9fa;">
+            <form id="search-train-form">
+                <div class="row g-2 align-items-center justify-content-center">
+                    <input type="hidden" name="fromStationId" id="fromStationId" value="<%= fromStationId %>">
+                    <input type="hidden" name="toStationId" id="toStationId" value="<%= toStationId %>">
 
-        <% if (trains.length === 0) { %>
-            <div class="row justify-content-center">
-                <div class="col-md-8 te">
-                    <div class="message-block">
-                        <span><strong>Вибачте!</strong> Поїзди між обраними станціями на вказану дату не знайдено.</span>
-                    </div>
-                </div>
-            </div>
-        <% }
-        trains.forEach(train => {
-            const totalMinutes = train.total_travel_time_minutes;
-            const hours = Math.floor(totalMinutes / 60);
-            const minutes = totalMinutes % 60;
-            const formattedDuration = `${hours} год ${minutes} хв`;
-        %>
-        <div class="train-card col-lg-10 col-xl-8 col-md-12 m-auto rounded-5 mb-3 shadow-sm">
-            <div class="content flex-grow-1">
-                <div class="header d-flex">
-                    <div class="train-number"><%= train.train_number %></div>
-                </div>
-                <div class="row">
-                    <div class="route-info col-md-8 p-0 mt-3 ps-1">
-                        <div class="station-info">
-                            <span class="time-text"><%= train.departure_time %></span>
-                            <br>
-                            <span><%= helpers.formatDateWithMonth(new Date(train.departure_date)) %></span>
-                            <br>
-                            <strong class="text-black"><%= train.departure_station_name %></strong>
+                    <div class="col-md-3 position-relative">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="fromStationInput" placeholder="Звідки"
+                                   autocomplete="off"
+                                   value="<%= stations.find(s => s.station_id === fromStationId).station_name %>"
+                                   required>
+                            <label for="fromStationInput">Звідки</label>
                         </div>
-
-                        <div class="duration-container">
-                            <div class="circle-start d-sm-block d-none"></div>
-                            <div class="line d-sm-block d-none"></div>
-                            <span class="duration-text"><%= formattedDuration %></span>
-                            <div class="line d-sm-block d-none"></div>
-                            <div class="circle-end d-sm-block d-none"></div>
-                        </div>
-
-                        <div class="station-info text-end">
-                            <strong class="time-text"><%= train.arrival_time %></strong>
-                            <br>
-                            <span><%= helpers.formatDateWithMonth(new Date(train.arrival_date)) %></span>
-                            <br>
-                            <strong class="text-black"><%= train.arrival_station_name %></strong>
-                        </div>
+                        <ul class="dropdown-menu w-100" id="fromStationDropdown"
+                            style="max-height: 200px; overflow-y: auto;">
+                        </ul>
                     </div>
-                    <div class="carriage-categories col-md-4 d-flex justify-content-center row m-auto">
-                        <% train.carriage_categories.forEach(category => { %>
-                            <a href="/train/<%= train.train_id %>/category/<%= category.carriage_category_id %>/seats?fromStationId=<%= fromStationId %>&toStationId=<%= toStationId %>&date=<%= date %>"
-                               class="text-decoration-none category-card card col h-100 d-flex justify-content-center p-3 rounded-5 m-2 shadow-none border-1">
-                                <div class="category">
-                                    <div class="class-info"><%= category.category_name %></div>
-                                    <div class="seat-info"><%= helpers.getSeatsLabel(category.free_seats_count) %></div>
-                                    <div class="price"><%= category.total_ticket_price %> ₴</div>
-                                </div>
-                            </a>
-                        <% }); %>
-                    </div>
-                </div>
 
-                <div class="mt-4">
-                    <div class="route-summary">
-                        <div class="btn btn-outline-light rounded-5" data-bs-toggle="modal"
-                             data-bs-target="#train<%= train.train_id %>RouteModal">
-                            <span><%= train.route_departure_station_name %></span>
-                            <i class="bi bi-arrow-right"></i>
-                            <span><%= train.route_arrival_station_name %></span>
+                    <div class="col-auto text-center">
+                        <button type="button" class="btn btn-outline-primary" id="swapBtn">
+                            <i class="bi bi-arrow-left-right fs-5"></i>
+                        </button>
+                    </div>
+
+                    <div class="col-md-3 position-relative">
+                        <div class="form-floating">
+                            <input type="text" class="form-control" id="toStationInput" placeholder="Куди"
+                                   autocomplete="off"
+                                   value="<%= stations.find(s => s.station_id === toStationId).station_name %>"
+                                   required>
+                            <label for="toStationInput">Куди</label>
+                        </div>
+                        <ul class="dropdown-menu w-100" id="toStationDropdown"
+                            style="max-height: 200px; overflow-y: auto;">
+                        </ul>
+                    </div>
+
+                    <div class="col-md-3">
+                        <div class="form-floating">
+                            <input type="date" class="form-control" id="travelDate" name="date" required
+                                   value="<%= new Date(date).toISOString().split('T')[0] %>"
+                                   min="<%= new Date().toISOString().split('T')[0] %>"
+                                   max="<%= new Date(new Date().setMonth(new Date().getMonth() + 2)).toISOString().split('T')[0] %>">
+                            <label for="travelDate">Дата</label>
                         </div>
                     </div>
+
+                    <div class="col-md-2">
+                        <input class="btn btn-primary w-100" type="submit" style="height: 58px;" value="Знайти">
+                    </div>
                 </div>
-            </div>
+            </form>
         </div>
-
-        <div class="modal fade" id="train<%= train.train_id %>RouteModal" tabindex="-1"
-             aria-labelledby="train<%= train.train_id %>RouteModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title" id="train<%= train.train_id %>RouteModalLabel">
-                            Маршрут <%= train.train_number %></h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="row flex-grow-1 pt-2 justify-content-center">
+            <div class="col-lg-2 col-xl-2 col-md-12" id="filters-sorting-block">
+                <div class="card rounded-3 mb-3">
+                    <div class="card-body">
+                        <h5 class="text-center mb-3">Сортування</h5>
+                        <div class="dropdown text-center">
+                            <button
+                                    class="btn btn-primary dropdown-toggle"
+                                    type="button"
+                                    id="sort-trains-button"
+                                    data-bs-toggle="dropdown"
+                                    aria-expanded="false">
+                                <i class="bi bi-sort-alpha-down"></i> Час відправлення
+                            </button>
+                            <ul class="dropdown-menu" aria-labelledby="sort-trains-button">
+                                <li>
+                                    <button class="dropdown-item sort-option" data-sort="departure_time"><i
+                                                class="bi bi-clock"></i>
+                                        Час відправлення
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item sort-option" data-sort="arrival_time"><i
+                                                class="bi bi-clock-fill"></i> Час прибуття
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item sort-option" data-sort="ticket_price"><i
+                                                class="bi bi-cash"></i>
+                                        Вартість квитків
+                                    </button>
+                                </li>
+                                <li>
+                                    <button class="dropdown-item sort-option" data-sort="travel_duration"><i
+                                                class="bi bi-hourglass-split"></i> Тривалість подорожі
+                                    </button>
+                                </li>
+                            </ul>
+                        </div>
                     </div>
-                    <div class="modal-body">
-                        <div class="container">
-                            <div class="row mb-4">
-                                <div class="col-3 text-muted">Час</div>
-                                <div class="col-6 text-muted">Станція</div>
-                                <div class="col-3 text-muted">Зупинка</div>
-                            </div>
-                            <% train.route_stations.forEach((station, index) => {
-                                const isFirstOrLastStation = index === 0 || index === train.route_stations.length - 1
-                            %>
-                            <div class="row mb-3 align-items-center <%= isFirstOrLastStation ? 'pt-3 pb-3' : '' %>">
-                                <div class="col-3">
-                                    <% if (station.arrival_time) { %>
-                                        <div><%= station.arrival_time.slice(0, -3) %></div>
-                                    <% } %>
-                                    <% if (station.departure_time) { %>
-                                        <div><%= station.departure_time.slice(0, -3) %></div>
-                                    <% } %>
-                                </div>
+                </div>
+                <div style="display: none;">
+                    <div class="card rounded-3">
+                        <div class="card-body">
+                            <h5 class="text-center mb-3">Фільтри</h5>
+                            <form id="filter-train-form">
+                                <div>
+                                    <div class="mb-2">
+                                        <label class="form-label" for="trainCategoryId">Категорія поїзда</label>
+                                        <select class="form-select" id="trainCategoryId" name="category"></select>
+                                    </div>
 
-                                <div class="col-6">
-                                    <span style="font-weight: <%= isFirstOrLastStation ? '600' : '0' %>"><%= station.station_name %></span>
-                                </div>
+                                    <div class="mb-3" id="carriage-categories-filter">
+                                        <div class="d-flex justify-content-between align-items-center"
+                                             id="collapse-categories-block" data-bs-toggle="collapse"
+                                             data-bs-target="#carriageCategoryCollapse" aria-expanded="true"
+                                             aria-controls="carriageCategoryCollapse">
+                                            <label class="form-label mb-0">Категорії вагонів</label>
+                                            <button class="btn btn-link text-primary p-0 text-decoration-none"
+                                                    type="button">
+                                                <b><i class="bi bi-chevron-up"></i></b>
+                                            </button>
+                                        </div>
+                                        <div id="carriageCategoryCollapse" class="collapse show"></div>
+                                    </div>
 
-                                <div class="col-3">
-                                    <% if (index === 0) { %>
-                                        початкова
-                                    <% } else if (index === train.route_stations.length - 1) { %>
-                                        кінцева
-                                    <% } else { %>
-                                        <%= station.stay_time ? `${parseInt(station.stay_time.slice(3, 5))} хв` : '' %>
-                                    <% } %>
+                                    <div id="price-filter-block" class="mb-2">
+                                        <label for="priceRange" class="form-label">Ціна</label>
+                                        <div id="price-range-slider"></div>
+                                        <div class="d-flex justify-content-between mt-1">
+                                            <span id="minPriceLabel"><span id="minFilterPrice"></span> ₴</span>
+                                            <span id="maxPriceLabel"><span id="maxFilterPrice"></span> ₴</span>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label for="departureTime" class="form-label">Час відправлення</label>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <input type="time" class="form-control" id="departureTimeStart"
+                                                   name="departureTimeStart" value="00:00" required>
+                                            <span class="px-1">—</span>
+                                            <input type="time" class="form-control" id="departureTimeEnd"
+                                                   name="departureTimeEnd" value="23:59" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-2">
+                                        <label for="arrivalTime" class="form-label">Час прибуття</label>
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <input type="time" class="form-control" id="arrivalTimeStart"
+                                                   name="arrivalTimeStart" value="00:00" required>
+                                            <span class="px-1">—</span>
+                                            <input type="time" class="form-control" id="arrivalTimeEnd"
+                                                   name="arrivalTimeEnd" value="23:59" required>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-12 text-center mt-3">
+                                        <button type="submit" class="btn btn-outline-primary w-100">Застосувати</button>
+                                    </div>
                                 </div>
-                            </div>
-                            <% }) %>
+                            </form>
                         </div>
                     </div>
                 </div>
             </div>
+            <div id="train-results-block" class="col-lg-10 col-xl-8 col-md-12"></div>
         </div>
-        <% }); %>
-    </div>
+        <script src="js/searchTrainsForm.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/range-slider-input@2/dist/rangeslider.umd.min.js"></script>
+        <script>
+            <%- helpers.formatDateWithMonth.toString() %>
+            <%- helpers.getSeatsLabel.toString() %>
+
+            const stations = <%- JSON.stringify(stations) %>;
+
+            let priceRangeSlider;
+            let lastPriceRangeSliderValue = [0, 0];
+
+            function updatePriceRangeSlider(min, max, resetValue) {
+                const minPriceElement = document.getElementById('minFilterPrice');
+                const maxPriceElement = document.getElementById('maxFilterPrice');
+
+                let value = lastPriceRangeSliderValue;
+                if (resetValue) {
+                    value = [min, max];
+                }
+                lastPriceRangeSliderValue = value;
+
+                priceRangeSlider = rangeSlider(document.querySelector('#price-range-slider'), {
+                    rangeSlideDisabled: true,
+                    min,
+                    max,
+                    value,
+                    onInput: (value, userInteraction) => {
+                        minPriceElement.textContent = value[0].toString();
+                        maxPriceElement.textContent = value[1].toString();
+                    }
+                });
+
+                minPriceElement.textContent = min.toString();
+                maxPriceElement.textContent = max.toString();
+            }
+
+            function validateTimeRange(startInput, endInput) {
+                const validate = () => {
+                    if (endInput.value && endInput.value <= startInput.value) {
+                        endInput.setCustomValidity("Кінцевий час має бути більше початкового");
+                        startInput.classList.add('is-invalid');
+                        endInput.classList.add('is-invalid');
+                    } else {
+                        endInput.setCustomValidity("");
+                        startInput.classList.remove('is-invalid');
+                        endInput.classList.remove('is-invalid');
+                    }
+                }
+
+                startInput.addEventListener('input', validate);
+                endInput.addEventListener('input', validate);
+            }
+
+            let lastSearchParams = {
+                fromStationId: <%= fromStationId %>,
+                toStationId: <%= toStationId %>,
+                date: '<%= date %>',
+            }
+
+            let sortCriteria = 'departure_time'
+
+            async function searchTrains(applyFilters) {
+                const fromStationId = applyFilters ? lastSearchParams.fromStationId : +document.getElementById('fromStationId').value;
+                const toStationId = applyFilters ? lastSearchParams.toStationId : +document.getElementById('toStationId').value;
+                const date = applyFilters ? lastSearchParams.date : document.getElementById('travelDate').value;
+
+                const trainCategoryId = document.getElementById('trainCategoryId').value;
+                const minPrice = priceRangeSlider ? priceRangeSlider.value()[0] : 0;
+                const maxPrice = priceRangeSlider ? priceRangeSlider.value()[1] : 0;
+                const departureTimeStart = document.getElementById('departureTimeStart').value;
+                const departureTimeEnd = document.getElementById('departureTimeEnd').value;
+                const arrivalTimeStart = document.getElementById('arrivalTimeStart').value;
+                const arrivalTimeEnd = document.getElementById('arrivalTimeEnd').value;
+                const carriageCategoryIds = Array.from(document.querySelectorAll('.carriage-category-checkbox'))
+                    .filter(checkbox => checkbox.checked)
+                    .map(checkbox => checkbox.value);
+
+                lastSearchParams.fromStationId = fromStationId;
+                lastSearchParams.toStationId = toStationId;
+                lastSearchParams.date = date;
+
+                const searchUrlPart = `/search?fromStationId=${fromStationId}&toStationId=${toStationId}&date=${date}`;
+                const filterUrlParams = applyFilters ? `${trainCategoryId ? `&trainCategoryId=${trainCategoryId}` : ''}&minPrice=${minPrice}&maxPrice=${maxPrice}&departureTimeStart=${departureTimeStart}&departureTimeEnd=${departureTimeEnd}&arrivalTimeStart=${arrivalTimeStart}&arrivalTimeEnd=${arrivalTimeEnd}${carriageCategoryIds.length > 0 ? `&carriageCategoryIds=${carriageCategoryIds.join(',')}` : ''}` : '';
+
+                const response = await fetch(`/trains${searchUrlPart}&sortCriteria=${sortCriteria}${filterUrlParams}`);
+                if (response.ok) {
+                    window.history.replaceState({}, '', searchUrlPart);
+                    document.title = `Поїзди ${document.getElementById('fromStationInput').value} – ${document.getElementById('toStationInput').value} на ${formatDateWithMonth(new Date(date))} | Залізнична каса`;
+
+                    const trains = (await response.json()).trains;
+                    let html = '';
+
+                    if (!applyFilters) {
+                        document.getElementById('trainCategoryId').innerHTML = `
+                            <option value="">Усі категорії</option>
+                            ${[...new Map(trains.map(t => [t.train_category_id, t.train_category_name])).entries()]
+                            .map(([id, name]) => `<option value="${id}">${name}</option>`)
+                            .join('')}
+                        `;
+
+                        document.getElementById('carriageCategoryCollapse').innerHTML = trains
+                            .map(t => t.carriage_categories)
+                            .flat()
+                            .filter((value, index, self) =>
+                                    index === self.findIndex((c) => (
+                                        c.carriage_category_id === value.carriage_category_id
+                                    ))
+                            )
+                            .map(c => `
+                                <div class="form-check">
+                                    <input class="form-check-input carriage-category-checkbox" type="checkbox" id="category-${c.carriage_category_id}" value="${c.carriage_category_id}">
+                                    <label class="form-check-label" for="category-${c.carriage_category_id}">${c.category_name}</label>
+                                </div>
+                            `)
+                            .join('');
+
+
+                    }
+
+                    const filtersSortingBlock = document.getElementById('filters-sorting-block');
+
+                    if (trains.length === 0) {
+                        filtersSortingBlock.style.display = applyFilters ? 'block' : 'none';
+                        html = `
+                            <div class="row justify-content-center">
+                                <div class="col-md-12">
+                                    <div class="alert alert-secondary text-center">
+                                        <span>Поїздів не знайдено</span>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    } else {
+                        filtersSortingBlock.style.display = 'block';
+                        const priceRange = trains.map(t => t.carriage_categories).flat().reduce(
+                            (acc, category) => {
+                                acc.min = Math.min(acc.min, +category.total_ticket_price);
+                                acc.max = Math.max(acc.max, +category.total_ticket_price);
+                                return acc;
+                            },
+                            {min: Infinity, max: -Infinity}
+                        );
+                        if (!applyFilters) {
+                            updatePriceRangeSlider(priceRange.min, priceRange.max, true);
+                        }
+                    }
+
+                    trains.forEach((train) => {
+                        const totalMinutes = train.total_travel_time_minutes;
+                        const hours = Math.floor(totalMinutes / 60);
+                        const minutes = totalMinutes % 60;
+                        const formattedDuration = `${hours} год ${minutes} хв`
+
+                        let trainRouteHtml = '';
+                        train.route_stations.forEach((station, index) => {
+                            const isFirstOrLastStation = index === 0 || index === train.route_stations.length - 1
+                            trainRouteHtml += `
+                                <div class="row mb-3 align-items-center ${isFirstOrLastStation ? 'pt-3 pb-3' : ''}">
+                                    <div class="col-3">
+                                        ${station.arrival_time ? `<div>${station.arrival_time.slice(0, -3)}</div>` : ''}
+                                        ${station.departure_time ? `<div>${station.departure_time.slice(0, -3)}</div>` : ''}
+                                    </div>
+
+                                    <div class="col-6">
+                                        <span style="font-weight: ${isFirstOrLastStation ? '600' : '0'}">${station.station_name}</span>
+                                    </div>
+
+                                    <div class="col-3">
+                                    ${index === 0 ? 'початкова' : index === train.route_stations.length - 1 ? 'кінцева' : station.stay_time ? `${parseInt(station.stay_time.slice(3, 5))} хв` : ''}
+                                    </div>
+                                </div>
+                             `;
+                        });
+
+                        html += `
+                            <div class="train-card col-12 m-auto rounded-5 mb-3 shadow-sm">
+                            <div class="content flex-grow-1">
+                                <div class="header d-flex">
+                                    <div class="train-number">${train.train_number}</div>
+                                </div>
+                                <div class="row">
+                                    <div class="route-info col-md-8 p-0 mt-3 ps-1">
+                                        <div class="station-info">
+                                            <span class="time-text">${train.departure_time}</span>
+                                            <br>
+                                                <span>${formatDateWithMonth(new Date(train.departure_date))}</span>
+                                                <br>
+                                                <strong class="text-black">${train.departure_station_name}</strong>
+                                        </div>
+
+                                        <div class="duration-container">
+                                            <div class="circle-start d-sm-block d-none"></div>
+                                            <div class="line d-sm-block d-none"></div>
+                                            <span class="duration-text">${formattedDuration}</span>
+                                            <div class="line d-sm-block d-none"></div>
+                                            <div class="circle-end d-sm-block d-none"></div>
+                                        </div>
+
+                                        <div class="station-info text-end">
+                                            <strong class="time-text">${train.arrival_time}</strong>
+                                            <br>
+                                                <span>${formatDateWithMonth(new Date(train.arrival_date))}</span>
+                                                <br>
+                                                <strong class="text-black">${train.arrival_station_name}</strong>
+                                        </div>
+                                    </div>
+                                    <div class="carriage-categories col-md-4 d-flex justify-content-center row m-auto">
+                                        ${train.carriage_categories.map(category => `
+                                            <a href="/train/${train.train_id}/category/${category.carriage_category_id}/seats?fromStationId=${fromStationId}&toStationId=${toStationId}&date=${date}"
+                                               class="text-decoration-none category-card card col h-100 d-flex justify-content-center p-3 rounded-5 m-2 shadow-none border-1">
+                                                <div class="category">
+                                                    <div class="class-info">${category.category_name}</div>
+                                                    <div class="seat-info">${getSeatsLabel(category.free_seats_count)}</div>
+                                                    <div class="price">${category.total_ticket_price} ₴</div>
+                                                </div>
+                                            </a>`
+                        ).join('')}
+                                    </div>
+                                </div>
+
+                                <div class="mt-4">
+                                    <div class="route-summary">
+                                        <div class="btn btn-outline-light rounded-5" data-bs-toggle="modal"
+                                             data-bs-target="#train${train.train_id}RouteModal">
+                                            <span>${train.route_departure_station_name}</span>
+                                            <i class="bi bi-arrow-right"></i>
+                                            <span>${train.route_arrival_station_name}</span>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="train${train.train_id}RouteModal" tabindex="-1"
+                             aria-labelledby="train${train.train_id}RouteModalLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="train${train.train_id}RouteModalLabel">
+                                            Маршрут ${train.train_number}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div class="container">
+                                            <div class="row mb-4">
+                                                <div class="col-3 text-muted">Час</div>
+                                                <div class="col-6 text-muted">Станція</div>
+                                                <div class="col-3 text-muted">Зупинка</div>
+                                            </div>
+                                            ${trainRouteHtml}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    });
+                    document.getElementById('train-results-block').innerHTML = html;
+                }
+            }
+
+            validateTimeRange(
+                document.getElementById('departureTimeStart'),
+                document.getElementById('departureTimeEnd')
+            );
+
+            validateTimeRange(
+                document.getElementById('arrivalTimeStart'),
+                document.getElementById('arrivalTimeEnd')
+            );
+
+            document.getElementById('collapse-categories-block').addEventListener('click', function () {
+                const icon = this.querySelector('i');
+                if (icon.classList.contains('bi-chevron-down')) {
+                    icon.classList.replace('bi-chevron-down', 'bi-chevron-up');
+                } else {
+                    icon.classList.replace('bi-chevron-up', 'bi-chevron-down');
+                }
+            });
+
+            document.getElementById('search-train-form').addEventListener('submit', event => {
+                event.preventDefault();
+                searchTrains(false);
+
+                document.getElementById('trainCategoryId').value = '';
+                document.getElementById('departureTimeStart').value = '00:00';
+                document.getElementById('departureTimeEnd').value = '23:59';
+                document.getElementById('arrivalTimeStart').value = '00:00';
+                document.getElementById('arrivalTimeEnd').value = '23:59';
+            });
+
+            document.getElementById('filter-train-form').addEventListener('submit', event => {
+                event.preventDefault();
+                searchTrains(true);
+            });
+
+            document.querySelectorAll(".sort-option").forEach(button => {
+                button.addEventListener("click", (e) => {
+                    sortCriteria = e.target.getAttribute("data-sort");
+                    const selectedOptionText = e.target.textContent.trim();
+                    document.getElementById('sort-trains-button').innerHTML = `<i class="bi bi-sort-alpha-down"></i> ${selectedOptionText}`;
+                    searchTrains(true);
+                });
+            });
+
+            searchTrains(false);
+        </script>
 </main>
 </body>
 </html>

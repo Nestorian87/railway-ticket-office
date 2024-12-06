@@ -4,6 +4,8 @@ import {RouteStop} from "./RouteStop";
 export interface TrainSearchResult {
     train_id: number;
     train_number: string;
+    train_category_id: number;
+    train_category_name: string;
     departure_station_name: string;
     departure_time: string;
     arrival_time: string;
@@ -15,4 +17,5 @@ export interface TrainSearchResult {
     arrival_date: string;
     carriage_categories: CarriageCategorySearchResult[];
     route_stations: RouteStop[]
+    min_ticket_price: number;
 }

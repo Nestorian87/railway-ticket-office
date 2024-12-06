@@ -12,10 +12,12 @@ import pdf, {CreateOptions} from "html-pdf";
 import ejs from "ejs";
 import path from "node:path";
 import {TrainStationRepository} from "../repositories/trainStationRepository";
+import {TicketSearchQuery} from "../interfaces/TicketSearchQuery";
 
 export async function getUserTickets(req: UserRequest, res: express.Response) {
     try {
-        const tickets = await TicketService.getUserTickets(req.userId!);
+        const query = req.query as unknown as TicketSearchQuery;
+        const tickets = await TicketService.getUserTickets(req.userId!, query);
         res.status(200).json({data: tickets});
     } catch (err) {
         console.error(err);

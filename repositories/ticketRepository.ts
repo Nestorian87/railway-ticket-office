@@ -5,6 +5,8 @@ import {Ticket} from "../models/Ticket";
 import {TrainSearchResult} from "../interfaces/TrainSearchResult";
 import {TicketWithPrice} from "../interfaces/TicketWithPrice";
 import {Train} from "../models/Train";
+import {TicketSearchQuery} from "../interfaces/TicketSearchQuery";
+import * as sea from "node:sea";
 
 export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
     getTicketQuery(): string {
@@ -27,7 +29,9 @@ export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
                 b.discount_percentage,
                 tr.train_id,
                 tr.train_number,
-                tct.short_name AS train_category_name,
+                tr.train_category_id,
+                tct.short_name AS train_category_short_name,
+                tct.full_name AS train_category_full_name,
                 cs.seat_number,
                 tc.carriage_number,
                 cc.category_name AS carriage_category_name,
@@ -68,13 +72,49 @@ export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
         `;
     },
 
-    async findAllForUserWithPrice(userId: number): Promise<TicketWithPrice[]> {
+    async findForUserWithPrice(userId: number, searchQuery: TicketSearchQuery): Promise<TicketWithPrice[]> {
+
+        let sortColumn = 't.trip_start_date'
+        let sortMode = 'DESC'
+
+        switch (searchQuery.sortCriteria) {
+            case 'new_first':
+                sortColumn = 't.trip_start_date';
+                sortMode = 'DESC';
+                break;
+            case 'old_first':
+                sortColumn = 't.trip_start_date';
+                sortMode = 'ASC';
+                break;
+            case 'cheap_first':
+                sortColumn = 'ticket_price';
+                sortMode = 'ASC';
+                break;
+            case 'expensive_first':
+                sortColumn = 'ticket_price';
+                sortMode = 'DESC';
+                break;
+        }
+
         const ticketsQuery = `${this.getTicketQuery()} 
             WHERE t.user_id = ?
-            ORDER BY t.trip_start_date DESC;
+            AND p.passenger_last_name LIKE ?
+            ${searchQuery.fromStationId ? 'AND sd.station_id = ?' : ''}
+            ${searchQuery.toStationId ? 'AND sa.station_id = ?' : ''}
+            ${searchQuery.ticketValidity ? `AND TIMESTAMP(t.trip_start_date, tsd.departure_time) ${searchQuery.ticketValidity == 'valid' ? '>' : '<='} NOW()` : ''}
+            ${searchQuery.trainCategoryId ? `AND tr.train_category_id = ?` : ''}
+            ORDER BY ${sortColumn} ${sortMode};
         `;
 
-        return await this.query(ticketsQuery, [userId]) as unknown as TicketWithPrice[];
+        return await this.query(ticketsQuery,
+            [
+                userId,
+                `%${searchQuery.passengerLastName}%`,
+                searchQuery.fromStationId ? searchQuery.fromStationId : null,
+                searchQuery.toStationId ? searchQuery.toStationId : null,
+                searchQuery.trainCategoryId ? searchQuery.trainCategoryId : null,
+            ].filter(p => p != null)
+        ) as unknown as TicketWithPrice[];
     },
 
     async findOneByIdWithPrice(ticketId: number, usedId: number): Promise<TicketWithPrice | null> {

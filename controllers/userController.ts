@@ -23,6 +23,7 @@ export async function renderProfile(req: UserRequest, res: express.Response) {
     res.render('profile', {
         user: await UserService.getUser(req.userId!),
         benefits: await BenefitService.getAllBenefits(),
+        stations: await StationService.getAllStations(),
         helpers
     });
 }

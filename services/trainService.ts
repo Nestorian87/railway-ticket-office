@@ -13,8 +13,6 @@ import {BuyTicketsData} from "../interfaces/BuyTicketsData";
 import {TrainCarriageService} from "./trainCarriageService";
 import {TicketRepository} from "../repositories/ticketRepository";
 import {Ticket} from "../models/Ticket";
-import {CarriageCategoryService} from "./carriageCategoryService";
-import {Station} from "../models/Station";
 import {User} from "../models/User";
 import {Passenger} from "../models/Passenger";
 import {CarriageSeat} from "../models/CarriageSeat";
@@ -30,7 +28,16 @@ export const TrainService = {
         }
 
         const trains = await TrainRepository.findBetweenTwoStations(
-            query.fromStationId, query.toStationId, query.date
+            query.fromStationId,
+            query.toStationId,
+            query.date,
+            query.trainCategoryId,
+            query.departureTimeStart,
+            query.departureTimeEnd,
+            query.arrivalTimeStart,
+            query.arrivalTimeEnd,
+            query.carriageCategoryIds?.split(',').map(c => +c),
+            query.sortCriteria == "ticket_price" ? null : query.sortCriteria
         ) as TrainSearchResult[];
 
         if (trains.length == 0) {
@@ -44,7 +51,9 @@ export const TrainService = {
                 trainIds,
                 query.fromStationId,
                 query.toStationId,
-                query.date
+                query.date,
+                query.minPrice,
+                query.maxPrice
             );
 
         const routeStops = await TrainStationRepository.findRouteStops(trainIds);
@@ -66,9 +75,19 @@ export const TrainService = {
 
             train.carriage_categories = carriageCategories.filter(c => c.train_id == train.train_id)
             train.route_stations = routeStops.filter(s => s.train_id == train.train_id)
+
+            train.min_ticket_price = train.carriage_categories.length > 0
+                ? Math.min(...train.carriage_categories.map(c => c.total_ticket_price || Infinity))
+                : Infinity;
         }
 
-        return trains;
+        let filteredTrains = trains.filter(t => t.carriage_categories.length > 0);
+
+        if (query.sortCriteria === "ticket_price") {
+            filteredTrains = filteredTrains.sort((a, b) => a.min_ticket_price - b.min_ticket_price);
+        }
+
+        return filteredTrains;
     },
 
     async getTrainWithCarriagesAndSeats(

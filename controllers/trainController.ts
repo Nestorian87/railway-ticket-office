@@ -8,23 +8,29 @@ import {NotFoundError} from "../utils/errors/NotFoundError";
 import {TrainStationService} from "../services/trainStationService";
 import helpers from "../utils/helpers";
 import {CarriageCategoryService} from "../services/carriageCategoryService";
-import {PassengerService} from "../services/passengerService";
-import {BenefitService} from "../services/benefitService";
-import {BuyTicketsData} from "../interfaces/BuyTicketsData";
-import * as sea from "node:sea";
-import {SeatsAreNotFreeError} from "../utils/errors/SeatsAreNotFreeError";
+import {StationService} from "../services/stationService";
 
 export async function renderSearch(req: UserRequest, res: express.Response) {
     const query = req.query as unknown as SearchQuery;
 
     res.render('trains', {
-        trains: await TrainService.searchTrains(query),
-        fromStationId: query.fromStationId,
-        toStationId: query.toStationId,
+        fromStationId: +query.fromStationId,
+        toStationId: +query.toStationId,
         date: query.date,
         user: await UserService.getUser(req.userId!),
+        stations: await StationService.getAllStations(),
         helpers
     });
+}
+
+export async function searchTrains(req: UserRequest, res: express.Response) {
+    const query = req.query as unknown as SearchQuery;
+    if (!query.fromStationId || !query.toStationId || !query.date) {
+        res.status(400).json({error: "Invalid query"});
+        return;
+    }
+
+    res.status(200).json({trains: await TrainService.searchTrains(query)})
 }
 
 export async function renderSeats(req: UserRequest, res: express.Response) {
