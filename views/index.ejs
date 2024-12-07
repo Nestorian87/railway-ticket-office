@@ -9,6 +9,16 @@
 <body class="bg-light">
 <header>
     <%- include('partials/header'); %>
+    <style>
+        .hover-zoom:hover {
+            transform: scale(1.05);
+            transition: transform 0.3s ease;
+            cursor: pointer;
+        }
+        .hover-zoom {
+            transition: transform 0.3s ease;
+        }
+    </style>
 </header>
 <div class="background-image"></div>
 <main>
@@ -65,10 +75,37 @@
         </div>
     </div>
 
+    <section class="popular-routes p-2 card container mt-5 rounded-4 shadow-lg">
+        <div class="card-body">
+            <h2 class="text-center mb-5 text-primary">Популярні напрямки</h2>
+                <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+                    <% popularRoutes.forEach(route => { %>
+                        <div class="col">
+                            <div class="card shadow-lg rounded-3 border-0 hover-zoom"
+                                 onclick="fillStations(<%= route.departure_station_id %>, '<%= route.departure_station_name %>', <%= route.arrival_station_id %>, '<%= route.arrival_station_name %>')">
+                            <div class="card-body">
+                                    <h5 class="card-title text-dark fw-bold"><%= route.departure_station_name %> <i class="bi bi-arrow-right"></i> <%= route.arrival_station_name %></h5>
+
+                                    <p class="card-text text-muted">Кількість проданих квитків: <strong><%= route.tickets_sold %></strong></p>
+                                </div>
+                            </div>
+                        </div>
+                    <% }); %>
+                </div>
+        </div>
+    </section>
+
 </main>
 <script src="js/searchTrainsForm.js"></script>
 <script>
     const stations = <%- JSON.stringify(stations) %>;
+
+    function fillStations(departureStationId, departureStationName, arrivalStationId, arrivalStationName) {
+        fromStationIdInput.value = departureStationId;
+        toStationIdInput.value = arrivalStationId;
+        fromStationInput.value = departureStationName;
+        toStationInput.value = arrivalStationName;
+    }
 </script>
 </body>
 </html>

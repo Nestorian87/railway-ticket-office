@@ -15,7 +15,8 @@ import {PassengerService} from "../services/passengerService";
 export async function renderIndex(req: UserRequest, res: express.Response) {
     res.render('index', {
         user: await UserService.getUser(req.userId!),
-        stations: await StationService.getAllStations()
+        stations: await StationService.getAllStations(),
+        popularRoutes: await TicketService.getPopularRoutes()
     });
 }
 
@@ -24,6 +25,7 @@ export async function renderProfile(req: UserRequest, res: express.Response) {
         user: await UserService.getUser(req.userId!),
         benefits: await BenefitService.getAllBenefits(),
         stations: await StationService.getAllStations(),
+        statistics: await UserService.getUserStatistics(req.userId!),
         helpers
     });
 }

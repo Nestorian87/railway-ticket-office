@@ -7,6 +7,7 @@ import {TicketWithPrice} from "../interfaces/TicketWithPrice";
 import {Train} from "../models/Train";
 import {TicketSearchQuery} from "../interfaces/TicketSearchQuery";
 import * as sea from "node:sea";
+import {PopularRoute} from "../interfaces/PolarRoute";
 
 export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
     getTicketQuery(): string {
@@ -124,5 +125,26 @@ export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
 
         const results = await this.query(ticketQuery, [ticketId, usedId]) as unknown as TicketWithPrice[];
         return results.length > 0 ? results[0] : null;
+    },
+
+    async getPopularRoutes() {
+        const popularRoutesQuery = `
+            SELECT sd.station_name    AS departure_station_name,
+                   sa.station_name    AS arrival_station_name,
+                   COUNT(t.ticket_id) AS tickets_sold,
+                   sd.station_id AS departure_station_id,
+                   sa.station_id AS arrival_station_id
+            FROM ticket t
+                     JOIN
+                 train_station tsd ON t.departure_station_id = tsd.train_station_id
+                     JOIN
+                 train_station tsa ON t.arrival_station_id = tsa.train_station_id
+                     JOIN station sd ON tsd.station_id = sd.station_id
+                     JOIN station sa ON tsa.station_id = sa.station_id
+            GROUP BY t.departure_station_id, t.arrival_station_id
+            ORDER BY tickets_sold DESC
+            LIMIT 9
+        `;
+        return await this.query(popularRoutesQuery) as unknown as PopularRoute[];
     }
 });

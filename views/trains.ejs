@@ -367,7 +367,7 @@
                                     <div class="train-number">${train.train_number}</div>
                                 </div>
                                 <div class="row">
-                                    <div class="route-info col-md-8 p-0 mt-3 ps-1">
+                                    <div class="route-info col-md-7 p-0 mt-3 ps-1">
                                         <div class="station-info">
                                             <span class="time-text">${train.departure_time}</span>
                                             <br>
@@ -392,7 +392,7 @@
                                                 <strong class="text-black">${train.arrival_station_name}</strong>
                                         </div>
                                     </div>
-                                    <div class="carriage-categories col-md-4 d-flex justify-content-center row m-auto">
+                                    <div class="carriage-categories col-md-5 d-flex justify-content-center row m-auto">
                                         ${train.carriage_categories.map(category => `
                                             <a href="/train/${train.train_id}/category/${category.carriage_category_id}/seats?fromStationId=${fromStationId}&toStationId=${toStationId}&date=${date}"
                                                class="text-decoration-none category-card card col h-100 d-flex justify-content-center p-3 rounded-5 m-2 shadow-none border-1">

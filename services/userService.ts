@@ -5,6 +5,7 @@ import {UserExistsError} from "../utils/errors/UserExistsError";
 import {NotFoundError} from "../utils/errors/NotFoundError";
 import {IncorrectPasswordError} from "../utils/errors/IncorrectPasswordError";
 import {Not} from "typeorm";
+import {ProfileStatistics} from "../interfaces/ProfileStatistics";
 
 export const UserService = {
 
@@ -78,5 +79,9 @@ export const UserService = {
         if (result.affected === 0) {
             throw new NotFoundError("User is not found");
         }
+    },
+
+    async getUserStatistics(userId: number): Promise<ProfileStatistics> {
+        return UserRepository.getProfileStatistics(userId);
     }
 }
