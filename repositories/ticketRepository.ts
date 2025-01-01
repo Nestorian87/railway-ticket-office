@@ -143,7 +143,7 @@ export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
                      JOIN station sa ON tsa.station_id = sa.station_id
             GROUP BY t.departure_station_id, t.arrival_station_id
             ORDER BY tickets_sold DESC
-            LIMIT 9
+            LIMIT 6
         `;
         return await this.query(popularRoutesQuery) as unknown as PopularRoute[];
     }

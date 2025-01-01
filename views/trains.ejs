@@ -79,7 +79,7 @@
             </form>
         </div>
         <div class="row flex-grow-1 pt-2 justify-content-center">
-            <div class="col-lg-2 col-xl-2 col-md-12" id="filters-sorting-block">
+            <div class="col-lg-3 col-xl-3 col-md-12 mb-3" id="filters-sorting-block">
                 <div class="card rounded-3 mb-3">
                     <div class="card-body">
                         <h5 class="text-center mb-3">Сортування</h5>
@@ -184,7 +184,7 @@
                     </div>
                 </div>
             </div>
-            <div id="train-results-block" class="col-lg-10 col-xl-8 col-md-12"></div>
+            <div id="train-results-block" class="col-lg-9 col-xl-8 col-md-12"></div>
         </div>
         <script src="js/searchTrainsForm.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/range-slider-input@2/dist/rangeslider.umd.min.js"></script>
@@ -395,7 +395,7 @@
                                     <div class="carriage-categories col-md-5 d-flex justify-content-center row m-auto">
                                         ${train.carriage_categories.map(category => `
                                             <a href="/train/${train.train_id}/category/${category.carriage_category_id}/seats?fromStationId=${fromStationId}&toStationId=${toStationId}&date=${date}"
-                                               class="text-decoration-none category-card card col h-100 d-flex justify-content-center p-3 rounded-5 m-2 shadow-none border-1">
+                                               class="text-decoration-none category-card card col h-100 d-flex justify-content-center py-3 px-0 rounded-5 m-1 shadow-none border-1">
                                                 <div class="category">
                                                     <div class="class-info">${category.category_name}</div>
                                                     <div class="seat-info">${getSeatsLabel(category.free_seats_count)}</div>
