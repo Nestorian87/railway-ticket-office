@@ -141,7 +141,7 @@ export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
                  train_station tsa ON t.arrival_station_id = tsa.train_station_id
                      JOIN station sd ON tsd.station_id = sd.station_id
                      JOIN station sa ON tsa.station_id = sa.station_id
-            GROUP BY t.departure_station_id, t.arrival_station_id
+            GROUP BY sd.station_id, sa.station_id
             ORDER BY tickets_sold DESC
             LIMIT 6
         `;
