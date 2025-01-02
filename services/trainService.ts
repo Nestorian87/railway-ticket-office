@@ -133,6 +133,15 @@ export const TrainService = {
             fromStationId: data.fromStationId,
             toStationId: data.toStationId,
             date: data.date,
+            trainCategoryId: null,
+            minPrice: null,
+            maxPrice: null,
+            departureTimeStart: null,
+            departureTimeEnd: null,
+            arrivalTimeStart: null,
+            arrivalTimeEnd: null,
+            sortCriteria: null,
+            carriageCategoryIds: null
         }
 
         if (data.tickets.some(ticket => ticket.passengerId == null)) {
