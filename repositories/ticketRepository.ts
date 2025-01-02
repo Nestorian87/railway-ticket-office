@@ -7,7 +7,7 @@ import {TicketWithPrice} from "../interfaces/TicketWithPrice";
 import {Train} from "../models/Train";
 import {TicketSearchQuery} from "../interfaces/TicketSearchQuery";
 import * as sea from "node:sea";
-import {PopularRoute} from "../interfaces/PolarRoute";
+import {PopularRoute} from "../interfaces/PopularRoute";
 
 export const TicketRepository = AppDataSource.getRepository(Ticket).extend({
     getTicketQuery(): string {

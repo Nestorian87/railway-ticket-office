@@ -2,7 +2,7 @@ import {TicketRepository} from "../repositories/ticketRepository";
 import {TicketWithPrice} from "../interfaces/TicketWithPrice";
 import {TicketSearchQuery} from "../interfaces/TicketSearchQuery";
 import {Ticket} from "../models/Ticket";
-import {PopularRoute} from "../interfaces/PolarRoute";
+import {PopularRoute} from "../interfaces/PopularRoute";
 
 export const TicketService = {
 
